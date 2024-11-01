@@ -2,11 +2,11 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
     <title>artech</title>
     <subtitle>This is an example description</subtitle>
-    <link rel="self" type="application/atom+xml" href="https://not-matthias.github.io/apollo/atom.xml"/>
-    <link rel="alternate" type="text/html" href="https://not-matthias.github.io/apollo/"/>
+    <link rel="self" type="application/atom+xml" href="https://artech-git.github.io/apollo/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://artech-git.github.io/apollo/"/>
     <generator uri="https://www.getzola.org/">Zola</generator>
     <updated>2024-07-09T00:00:00+00:00</updated>
-    <id>https://not-matthias.github.io/apollo/atom.xml</id>
+    <id>https://artech-git.github.io/apollo/atom.xml</id>
     <entry xml:lang="en">
         <title>AsRef vs Borrow vs Deref Busted</title>
         <published>2024-07-09T00:00:00+00:00</published>
@@ -20,10 +20,10 @@
           </name>
         </author>
         
-        <link rel="alternate" type="text/html" href="https://not-matthias.github.io/apollo/posts/asref-borrow-deref/"/>
-        <id>https://not-matthias.github.io/apollo/posts/asref-borrow-deref/</id>
+        <link rel="alternate" type="text/html" href="https://artech-git.github.io/apollo/posts/asref-borrow-deref/"/>
+        <id>https://artech-git.github.io/apollo/posts/asref-borrow-deref/</id>
         
-        <content type="html" xml:base="https://not-matthias.github.io/apollo/posts/asref-borrow-deref/">&lt;p&gt;Havn&#x27;t you come across the trait &lt;code&gt;AsRef&amp;lt;T&amp;gt;&lt;&#x2F;code&gt; , &lt;code&gt;Borrow&lt;&#x2F;code&gt; and &lt;code&gt;Deref&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://artech-git.github.io/apollo/posts/asref-borrow-deref/">&lt;p&gt;Havn&#x27;t you come across the trait &lt;code&gt;AsRef&amp;lt;T&amp;gt;&lt;&#x2F;code&gt; , &lt;code&gt;Borrow&lt;&#x2F;code&gt; and &lt;code&gt;Deref&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
 &lt;h1 id=&quot;asref-vs-borrow-vs-deref-in-rust&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#asref-vs-borrow-vs-deref-in-rust&quot; aria-label=&quot;Anchor link for: asref-vs-borrow-vs-deref-in-rust&quot;&gt;AsRef vs Borrow vs Deref in Rust&lt;&#x2F;a&gt;&lt;&#x2F;h1&gt;
 &lt;h2 id=&quot;asref&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#asref&quot; aria-label=&quot;Anchor link for: asref&quot;&gt;AsRef&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
 &lt;p&gt;&lt;code&gt;AsRef&lt;&#x2F;code&gt; is a trait for performing cheap reference-to-reference conversions. It&#x27;s most commonly used for functions that can accept multiple types of string references.&lt;&#x2F;p&gt;
@@ -185,10 +185,10 @@
           </name>
         </author>
         
-        <link rel="alternate" type="text/html" href="https://not-matthias.github.io/apollo/posts/panic-handling/"/>
-        <id>https://not-matthias.github.io/apollo/posts/panic-handling/</id>
+        <link rel="alternate" type="text/html" href="https://artech-git.github.io/apollo/posts/panic-handling/"/>
+        <id>https://artech-git.github.io/apollo/posts/panic-handling/</id>
         
-        <content type="html" xml:base="https://not-matthias.github.io/apollo/posts/panic-handling/">&lt;h1 id=&quot;comprehensive-guide-to-panic-handling-in-async-rust&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#comprehensive-guide-to-panic-handling-in-async-rust&quot; aria-label=&quot;Anchor link for: comprehensive-guide-to-panic-handling-in-async-rust&quot;&gt;Comprehensive Guide to Panic Handling in Async Rust&lt;&#x2F;a&gt;&lt;&#x2F;h1&gt;
+        <content type="html" xml:base="https://artech-git.github.io/apollo/posts/panic-handling/">&lt;h1 id=&quot;comprehensive-guide-to-panic-handling-in-async-rust&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#comprehensive-guide-to-panic-handling-in-async-rust&quot; aria-label=&quot;Anchor link for: comprehensive-guide-to-panic-handling-in-async-rust&quot;&gt;Comprehensive Guide to Panic Handling in Async Rust&lt;&#x2F;a&gt;&lt;&#x2F;h1&gt;
 &lt;h2 id=&quot;introduction&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#introduction&quot; aria-label=&quot;Anchor link for: introduction&quot;&gt;Introduction&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
 &lt;p&gt;Panic handling in async Rust requires special consideration, especially in larger codebases where reliability and graceful error handling are crucial. This guide explores various aspects of panic handling, including best practices, common scenarios, and practical solutions.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;understanding-panics-in-rust&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#understanding-panics-in-rust&quot; aria-label=&quot;Anchor link for: understanding-panics-in-rust&quot;&gt;Understanding Panics in Rust&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
@@ -597,10 +597,10 @@
           </name>
         </author>
         
-        <link rel="alternate" type="text/html" href="https://not-matthias.github.io/apollo/posts/send-and-sync/"/>
-        <id>https://not-matthias.github.io/apollo/posts/send-and-sync/</id>
+        <link rel="alternate" type="text/html" href="https://artech-git.github.io/apollo/posts/send-and-sync/"/>
+        <id>https://artech-git.github.io/apollo/posts/send-and-sync/</id>
         
-        <content type="html" xml:base="https://not-matthias.github.io/apollo/posts/send-and-sync/">&lt;h1 id=&quot;understanding-send-and-sync-hazards-in-rust-a-comprehensive-guide&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#understanding-send-and-sync-hazards-in-rust-a-comprehensive-guide&quot; aria-label=&quot;Anchor link for: understanding-send-and-sync-hazards-in-rust-a-comprehensive-guide&quot;&gt;Understanding Send and Sync Hazards in Rust: A Comprehensive Guide&lt;&#x2F;a&gt;&lt;&#x2F;h1&gt;
+        <content type="html" xml:base="https://artech-git.github.io/apollo/posts/send-and-sync/">&lt;h1 id=&quot;understanding-send-and-sync-hazards-in-rust-a-comprehensive-guide&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#understanding-send-and-sync-hazards-in-rust-a-comprehensive-guide&quot; aria-label=&quot;Anchor link for: understanding-send-and-sync-hazards-in-rust-a-comprehensive-guide&quot;&gt;Understanding Send and Sync Hazards in Rust: A Comprehensive Guide&lt;&#x2F;a&gt;&lt;&#x2F;h1&gt;
 &lt;h2 id=&quot;introduction&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#introduction&quot; aria-label=&quot;Anchor link for: introduction&quot;&gt;Introduction&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
 &lt;p&gt;The &lt;code&gt;Send&lt;&#x2F;code&gt; and &lt;code&gt;Sync&lt;&#x2F;code&gt; traits play a crucial role in Rust&#x27;s concurrency safety model. However, incorrect implementations or assumptions about these traits can lead to serious bugs and undefined behavior, especially in large async codebases.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;foundation-understanding-send-and-sync&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#foundation-understanding-send-and-sync&quot; aria-label=&quot;Anchor link for: foundation-understanding-send-and-sync&quot;&gt;Foundation: Understanding Send and Sync&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
@@ -974,10 +974,10 @@
           </name>
         </author>
         
-        <link rel="alternate" type="text/html" href="https://not-matthias.github.io/apollo/posts/streams-in-rust/"/>
-        <id>https://not-matthias.github.io/apollo/posts/streams-in-rust/</id>
+        <link rel="alternate" type="text/html" href="https://artech-git.github.io/apollo/posts/streams-in-rust/"/>
+        <id>https://artech-git.github.io/apollo/posts/streams-in-rust/</id>
         
-        <content type="html" xml:base="https://not-matthias.github.io/apollo/posts/streams-in-rust/">&lt;h1 id=&quot;comprehensive-guide-to-futures-stream-in-rust&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#comprehensive-guide-to-futures-stream-in-rust&quot; aria-label=&quot;Anchor link for: comprehensive-guide-to-futures-stream-in-rust&quot;&gt;Comprehensive Guide to Futures::Stream in Rust&lt;&#x2F;a&gt;&lt;&#x2F;h1&gt;
+        <content type="html" xml:base="https://artech-git.github.io/apollo/posts/streams-in-rust/">&lt;h1 id=&quot;comprehensive-guide-to-futures-stream-in-rust&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#comprehensive-guide-to-futures-stream-in-rust&quot; aria-label=&quot;Anchor link for: comprehensive-guide-to-futures-stream-in-rust&quot;&gt;Comprehensive Guide to Futures::Stream in Rust&lt;&#x2F;a&gt;&lt;&#x2F;h1&gt;
 &lt;h2 id=&quot;introduction&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#introduction&quot; aria-label=&quot;Anchor link for: introduction&quot;&gt;Introduction&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
 &lt;p&gt;&lt;code&gt;futures::Stream&lt;&#x2F;code&gt; is a fundamental abstraction in asynchronous Rust programming that represents a sequence of asynchronous values. This guide explores its design, implementation patterns, and practical considerations.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;basic-concepts&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#basic-concepts&quot; aria-label=&quot;Anchor link for: basic-concepts&quot;&gt;Basic Concepts&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
@@ -1524,10 +1524,10 @@
           </name>
         </author>
         
-        <link rel="alternate" type="text/html" href="https://not-matthias.github.io/apollo/talks/talk-1/"/>
-        <id>https://not-matthias.github.io/apollo/talks/talk-1/</id>
+        <link rel="alternate" type="text/html" href="https://artech-git.github.io/apollo/talks/talk-1/"/>
+        <id>https://artech-git.github.io/apollo/talks/talk-1/</id>
         
-        <content type="html" xml:base="https://not-matthias.github.io/apollo/talks/talk-1/">&lt;p&gt;I gave a talk titled &quot;Don&#x27;t Block, Just Flow: Embracing Asynchronous with Rust Streams.&quot; It focused on using futures::stream::Stream in Rust.&lt;&#x2F;p&gt;
+        <content type="html" xml:base="https://artech-git.github.io/apollo/talks/talk-1/">&lt;p&gt;I gave a talk titled &quot;Don&#x27;t Block, Just Flow: Embracing Asynchronous with Rust Streams.&quot; It focused on using futures::stream::Stream in Rust.&lt;&#x2F;p&gt;
 &lt;p&gt;The talk covered the importance of I&#x2F;O concurrency for all applications, pinning and boxing of dynamic types, the relationship between Send and Sync with streams, and backpressure handling. In general, it explored how futures::stream::Stream is used, the practical utilities it offers for applications, and the issues it helps address.&lt;&#x2F;p&gt;
 &lt;p&gt;For those interested in learning more, you can find resources &lt;a href=&quot;https:&#x2F;&#x2F;lnkd.in&#x2F;gwGTbezv&quot;&gt;here: &lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
 </content>

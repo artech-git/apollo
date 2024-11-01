@@ -1,89 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-        <loc>https://not-matthias.github.io/apollo/</loc>
+        <loc>https://artech-git.github.io/apollo/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/about/</loc>
+        <loc>https://artech-git.github.io/apollo/about/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/books/</loc>
+        <loc>https://artech-git.github.io/apollo/books/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/certs/</loc>
+        <loc>https://artech-git.github.io/apollo/certs/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/courses/</loc>
+        <loc>https://artech-git.github.io/apollo/courses/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/courses/course-1/</loc>
+        <loc>https://artech-git.github.io/apollo/courses/course-1/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/courses/course-2/</loc>
+        <loc>https://artech-git.github.io/apollo/courses/course-2/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/posts/</loc>
+        <loc>https://artech-git.github.io/apollo/posts/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/posts/asref-borrow-deref/</loc>
+        <loc>https://artech-git.github.io/apollo/posts/asref-borrow-deref/</loc>
         <lastmod>2024-07-09</lastmod>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/posts/page/1/</loc>
+        <loc>https://artech-git.github.io/apollo/posts/page/1/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/posts/panic-handling/</loc>
+        <loc>https://artech-git.github.io/apollo/posts/panic-handling/</loc>
         <lastmod>2024-07-05</lastmod>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/posts/send-and-sync/</loc>
+        <loc>https://artech-git.github.io/apollo/posts/send-and-sync/</loc>
         <lastmod>2024-07-04</lastmod>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/posts/streams-in-rust/</loc>
+        <loc>https://artech-git.github.io/apollo/posts/streams-in-rust/</loc>
         <lastmod>2024-07-03</lastmod>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/projects/</loc>
+        <loc>https://artech-git.github.io/apollo/projects/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/projects/project-1/</loc>
+        <loc>https://artech-git.github.io/apollo/projects/project-1/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/projects/project-2/</loc>
+        <loc>https://artech-git.github.io/apollo/projects/project-2/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/projects/project-3/</loc>
+        <loc>https://artech-git.github.io/apollo/projects/project-3/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/projects/project-4/</loc>
+        <loc>https://artech-git.github.io/apollo/projects/project-4/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/resume/</loc>
+        <loc>https://artech-git.github.io/apollo/resume/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/tags/</loc>
+        <loc>https://artech-git.github.io/apollo/tags/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/tags/coding/</loc>
+        <loc>https://artech-git.github.io/apollo/tags/coding/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/tags/documentation/</loc>
+        <loc>https://artech-git.github.io/apollo/tags/documentation/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/tags/low-level-design/</loc>
+        <loc>https://artech-git.github.io/apollo/tags/low-level-design/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/tags/talk/</loc>
+        <loc>https://artech-git.github.io/apollo/tags/talk/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/talks/</loc>
+        <loc>https://artech-git.github.io/apollo/talks/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/talks/page/1/</loc>
+        <loc>https://artech-git.github.io/apollo/talks/page/1/</loc>
     </url>
     <url>
-        <loc>https://not-matthias.github.io/apollo/talks/talk-1/</loc>
+        <loc>https://artech-git.github.io/apollo/talks/talk-1/</loc>
         <lastmod>2024-03-02</lastmod>
     </url>
 </urlset>
