@@ -1,6 +1,6 @@
 base_url = "https://artech-git.github.io/apollo/"
 title = "artech"
-description = "This is an example description"
+description = "Welcome to my personal site where I share my thoughts, projects, and experiences."
 build_search_index = false
 generate_feeds = true
 compile_sass = true
