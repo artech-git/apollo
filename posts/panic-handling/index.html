@@ -1,0 +1,322 @@
+<!doctype html><html lang=en><head><meta charset=UTF-8><meta content="IE=edge" http-equiv=X-UA-Compatible><meta content="width=device-width,initial-scale=1.0" name=viewport><title>
+         Understanding panic handling in larger codebase
+        
+    </title><meta content="Understanding panic handling in larger codebase" property=og:title><meta content="This is an example description" property=og:description><meta content="This is an example description" name=description><link href=/icon/favicon.png rel=icon type=image/png><link href=https://not-matthias.github.io/apollo/fonts.css rel=stylesheet><script src=https://not-matthias.github.io/apollo/js/codeblock.js></script><script src=https://not-matthias.github.io/apollo/js/toc.js></script><script src=https://not-matthias.github.io/apollo/js/note.js></script><script>MathJax={tex:{inlineMath:[[`\$`,`\$`],[`\\\\(`,`\\\\)`]]}}</script><script async id=MathJax-script src=https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js></script><link href=https://not-matthias.github.io/apollo/atom.xml rel=alternate title=artech type=application/atom+xml><link href=https://not-matthias.github.io/apollo/theme/light.css rel=stylesheet><link href=https://not-matthias.github.io/apollo/theme/dark.css id=darkModeStyle rel=stylesheet><script src=https://not-matthias.github.io/apollo/js/themetoggle.js></script><script>setTheme(getSavedTheme())</script><link href=https://not-matthias.github.io/apollo/main.css media=screen rel=stylesheet><body><div class=content><header><div class=main><a href=https://not-matthias.github.io/apollo/>artech</a><div class=socials><a class=social href=https://github.com/artech-git/ rel=me> <img alt=github src=https://not-matthias.github.io/apollo/social_icons/github.svg> </a><a class=social href=https://www.linkedin.com/in/prabhat25/ rel=me> <img alt=linked src=https://not-matthias.github.io/apollo/social_icons/linkedin.svg> </a></div></div><nav><a href=https://not-matthias.github.io/apollo/posts style=margin-left:.5em>/posts</a><a href=https://not-matthias.github.io/apollo/projects style=margin-left:.5em>/projects</a><a href=https://not-matthias.github.io/apollo/courses style=margin-left:.5em>/courses</a><a href=https://not-matthias.github.io/apollo/books style=margin-left:.5em>/books</a><a href=https://not-matthias.github.io/apollo/resume style=margin-left:.5em>/resume</a><a href=https://not-matthias.github.io/apollo/talks style=margin-left:.5em>/talks</a><a href=https://not-matthias.github.io/apollo/certs style=margin-left:.5em>/certs</a><a href=https://not-matthias.github.io/apollo/about style=margin-left:.5em>/about</a> |<a onclick="toggleTheme(); event.preventDefault();" href=# id=dark-mode-toggle> <img alt=Light id=sun-icon src=https://not-matthias.github.io/apollo/feather/sun.svg style=filter:invert()> <img alt=Dark id=moon-icon src=https://not-matthias.github.io/apollo/feather/moon.svg> </a><script>updateItemToggleTheme()</script></nav></header><main><article><div class=title><div class=page-header>Understanding panic handling in larger codebase<span class=primary-color style=font-size:1.6em>.</span></div><div class=meta>Posted on <time>2024-07-05</time><span class=tags-label> :: Tags:</span><span class=tags> <a class=post-tag href=https://not-matthias.github.io/apollo/tags/low-level-design/>low-level design</a> </span> :: <a rel="noopener noreferrer" href=https://github.com/not-matthias/apollo/tree/main/contentposts/panic_handling.md target=_blank> Source Code</a></div></div><div class=toc-container><h1 class=toc-title>Table of Contents</h1><ul class=toc-list><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#comprehensive-guide-to-panic-handling-in-async-rust>Comprehensive Guide to Panic Handling in Async Rust</a> <ul><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#introduction>Introduction</a><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#understanding-panics-in-rust>Understanding Panics in Rust</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#what-is-a-panic>What is a Panic?</a><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#common-panic-scenarios>Common Panic Scenarios</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#panic-handling-in-async-context>Panic Handling in Async Context</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#the-challenge-with-async-panics>The Challenge with Async Panics</a><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#implementing-robust-panic-handling>Implementing Robust Panic Handling</a><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#custom-panic-hooks-for-application-wide-handling>Custom Panic Hooks for Application-Wide Handling</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#structured-panic-handling-for-large-applications>Structured Panic Handling for Large Applications</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#1-panic-recovery-middleware>1. Panic Recovery Middleware</a><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#2-supervisor-pattern-for-long-running-tasks>2. Supervisor Pattern for Long-Running Tasks</a><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#3-error-context-and-reporting>3. Error Context and Reporting</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#best-practices-for-panic-prevention>Best Practices for Panic Prevention</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#1-defensive-programming>1. Defensive Programming</a><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#2-resource-cleanup-with-drop>2. Resource Cleanup with Drop</a><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#3-structured-logging-for-better-debugging>3. Structured Logging for Better Debugging</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#testing-panic-handling>Testing Panic Handling</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#1-unit-tests-for-panic-recovery>1. Unit Tests for Panic Recovery</a><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#2-integration-tests>2. Integration Tests</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#production-considerations>Production Considerations</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#1-memory-safety-in-panic-situations>1. Memory Safety in Panic Situations</a><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#2-monitoring-and-alerting>2. Monitoring and Alerting</a><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#3-graceful-shutdown-implementation>3. Graceful Shutdown Implementation</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/panic-handling/#conclusion>Conclusion</a></ul></ul></div><section class=body><h1 id=comprehensive-guide-to-panic-handling-in-async-rust><a aria-label="Anchor link for: comprehensive-guide-to-panic-handling-in-async-rust" class=zola-anchor href=#comprehensive-guide-to-panic-handling-in-async-rust>Comprehensive Guide to Panic Handling in Async Rust</a></h1><h2 id=introduction><a aria-label="Anchor link for: introduction" class=zola-anchor href=#introduction>Introduction</a></h2><p>Panic handling in async Rust requires special consideration, especially in larger codebases where reliability and graceful error handling are crucial. This guide explores various aspects of panic handling, including best practices, common scenarios, and practical solutions.<h2 id=understanding-panics-in-rust><a aria-label="Anchor link for: understanding-panics-in-rust" class=zola-anchor href=#understanding-panics-in-rust>Understanding Panics in Rust</a></h2><h3 id=what-is-a-panic><a aria-label="Anchor link for: what-is-a-panic" class=zola-anchor href=#what-is-a-panic>What is a Panic?</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>fn </span><span style=color:#f29718>example_panic</span><span>() {
+</span><span>    </span><span style=color:#f07171>panic!</span><span>(</span><span style=color:#86b300>"This is a panic!"</span><span>)</span><span style=color:#61676ccc>;  </span><span style=color:#abb0b6;font-style:italic>// Explicit panic
+</span><span>    </span><span style=color:#fa6e32>let</span><span> v </span><span style=color:#ed9366>= </span><span style=color:#f07171>vec!</span><span>[</span><span style=color:#ff8f40>1</span><span style=color:#61676ccc>, </span><span style=color:#ff8f40>2</span><span style=color:#61676ccc>, </span><span style=color:#ff8f40>3</span><span>]</span><span style=color:#61676ccc>;
+</span><span>    v[</span><span style=color:#ff8f40>99</span><span>]</span><span style=color:#61676ccc>;  </span><span style=color:#abb0b6;font-style:italic>// Runtime panic: index out of bounds
+</span><span>}
+</span></code></pre><h3 id=common-panic-scenarios><a aria-label="Anchor link for: common-panic-scenarios" class=zola-anchor href=#common-panic-scenarios>Common Panic Scenarios</a></h3><ol><li><strong>Array/Vector Index Out of Bounds</strong></ol><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>fn </span><span style=color:#f29718>array_panic</span><span>() {
+</span><span>    </span><span style=color:#fa6e32>let</span><span> arr </span><span style=color:#ed9366>= </span><span>[</span><span style=color:#ff8f40>1</span><span style=color:#61676ccc>, </span><span style=color:#ff8f40>2</span><span style=color:#61676ccc>, </span><span style=color:#ff8f40>3</span><span>]</span><span style=color:#61676ccc>;
+</span><span>    </span><span style=color:#fa6e32>let</span><span> index </span><span style=color:#ed9366>= </span><span style=color:#ff8f40>5</span><span style=color:#61676ccc>;
+</span><span>    </span><span style=color:#f07171>println!</span><span>(</span><span style=color:#86b300>"</span><span style=color:#ff8f40>{}</span><span style=color:#86b300>"</span><span style=color:#61676ccc>,</span><span> arr[index])</span><span style=color:#61676ccc>;  </span><span style=color:#abb0b6;font-style:italic>// PANIC!
+</span><span>}
+</span></code></pre><ol start=2><li><strong>Integer Overflow in Debug Mode</strong></ol><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>fn </span><span style=color:#f29718>overflow_panic</span><span>() {
+</span><span>    </span><span style=color:#fa6e32>let</span><span> x</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>u8 </span><span style=color:#ed9366>= </span><span style=color:#ff8f40>255</span><span style=color:#61676ccc>;
+</span><span>    </span><span style=color:#fa6e32>let</span><span> y </span><span style=color:#ed9366>=</span><span> x </span><span style=color:#ed9366>+ </span><span style=color:#ff8f40>1</span><span style=color:#61676ccc>;  </span><span style=color:#abb0b6;font-style:italic>// PANIC in debug mode
+</span><span>}
+</span></code></pre><ol start=3><li><strong>Unwrap on None</strong></ol><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>fn </span><span style=color:#f29718>unwrap_panic</span><span>() {
+</span><span>    </span><span style=color:#fa6e32>let</span><span> opt</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>i32</span><span>> </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>None</span><span style=color:#61676ccc>;
+</span><span>    opt</span><span style=color:#ed9366>.</span><span style=color:#f07171>unwrap</span><span>()</span><span style=color:#61676ccc>;  </span><span style=color:#abb0b6;font-style:italic>// PANIC!
+</span><span>}
+</span></code></pre><h2 id=panic-handling-in-async-context><a aria-label="Anchor link for: panic-handling-in-async-context" class=zola-anchor href=#panic-handling-in-async-context>Panic Handling in Async Context</a></h2><h3 id=the-challenge-with-async-panics><a aria-label="Anchor link for: the-challenge-with-async-panics" class=zola-anchor href=#the-challenge-with-async-panics>The Challenge with Async Panics</a></h3><p>Async code introduces additional complexity because panics can occur in different contexts:<ol><li><strong>Task Panics</strong></ol><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span>async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>task_panic</span><span>() {
+</span><span>    tokio</span><span style=color:#ed9366>::</span><span>spawn(async {
+</span><span>        </span><span style=color:#f07171>panic!</span><span>(</span><span style=color:#86b300>"Task panic!"</span><span>)</span><span style=color:#61676ccc>;
+</span><span>    })</span><span style=color:#61676ccc>;
+</span><span>}
+</span></code></pre><ol start=2><li><strong>Future Panics</strong></ol><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span>async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>future_panic</span><span>() </span><span style=color:#61676ccc>-> </span><span style=color:#55b4d4;font-style:italic>Result</span><span><(), </span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn std</span><span style=color:#ed9366>::</span><span>error</span><span style=color:#ed9366>::</span><span>Error>> {
+</span><span>    </span><span style=color:#fa6e32>let</span><span> future </span><span style=color:#ed9366>=</span><span> async {
+</span><span>        </span><span style=color:#f07171>panic!</span><span>(</span><span style=color:#86b300>"Future panic!"</span><span>)</span><span style=color:#61676ccc>;
+</span><span>    }</span><span style=color:#61676ccc>;
+</span><span>    future</span><span style=color:#ed9366>.</span><span>await
+</span><span>}
+</span></code></pre><h3 id=implementing-robust-panic-handling><a aria-label="Anchor link for: implementing-robust-panic-handling" class=zola-anchor href=#implementing-robust-panic-handling>Implementing Robust Panic Handling</a></h3><h4 id=1-using-catch-unwind-in-async-context><a aria-label="Anchor link for: 1-using-catch-unwind-in-async-context" class=zola-anchor href=#1-using-catch-unwind-in-async-context>1. Using catch_unwind in Async Context</a></h4><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>use </span><span>std</span><span style=color:#ed9366>::</span><span>panic</span><span style=color:#ed9366>::</span><span>{catch_unwind</span><span style=color:#61676ccc>,</span><span> AssertUnwindSafe}</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>handle_async_panic</span><span>() </span><span style=color:#61676ccc>-> </span><span style=color:#55b4d4;font-style:italic>Result</span><span><(), </span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn std</span><span style=color:#ed9366>::</span><span>error</span><span style=color:#ed9366>::</span><span>Error>> {
+</span><span>    </span><span style=color:#fa6e32>let</span><span> result </span><span style=color:#ed9366>= </span><span style=color:#f07171>catch_unwind</span><span>(AssertUnwindSafe(async {
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// Potentially panicking async code
+</span><span>        </span><span style=color:#f07171>panic!</span><span>(</span><span style=color:#86b300>"Async panic!"</span><span>)</span><span style=color:#61676ccc>;
+</span><span>    }))</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>match</span><span> result {
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(</span><span style=color:#ed9366>_</span><span>) </span><span style=color:#ed9366>=> </span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(())</span><span style=color:#61676ccc>,
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e) </span><span style=color:#ed9366>=> </span><span>{
+</span><span>            </span><span style=color:#f07171>eprintln!</span><span>(</span><span style=color:#86b300>"Caught panic: </span><span style=color:#ff8f40>{:?}</span><span style=color:#86b300>"</span><span style=color:#61676ccc>,</span><span> e)</span><span style=color:#61676ccc>;
+</span><span>            </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(</span><span style=color:#86b300>"Async operation panicked"</span><span style=color:#ed9366>.</span><span style=color:#f07171>into</span><span>())
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h4 id=2-task-level-panic-handling-with-tokio><a aria-label="Anchor link for: 2-task-level-panic-handling-with-tokio" class=zola-anchor href=#2-task-level-panic-handling-with-tokio>2. Task-Level Panic Handling with Tokio</a></h4><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>use </span><span>tokio</span><span style=color:#ed9366>::</span><span>task</span><span style=color:#ed9366>::</span><span>JoinHandle</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>spawn_supervised_task</span><span>() </span><span style=color:#61676ccc>-> </span><span style=color:#55b4d4;font-style:italic>Result</span><span><(), </span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn std</span><span style=color:#ed9366>::</span><span>error</span><span style=color:#ed9366>::</span><span>Error>> {
+</span><span>    </span><span style=color:#fa6e32>let</span><span> handle</span><span style=color:#61676ccc>: </span><span>JoinHandle<</span><span style=color:#55b4d4;font-style:italic>Result</span><span><(), Error>> </span><span style=color:#ed9366>= </span><span>tokio</span><span style=color:#ed9366>::</span><span>spawn(async {
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// Your task code here
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(())
+</span><span>    })</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>match</span><span> handle</span><span style=color:#ed9366>.</span><span>await {
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(</span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(</span><span style=color:#ed9366>_</span><span>)) </span><span style=color:#ed9366>=> </span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(())</span><span style=color:#61676ccc>,
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(</span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e)) </span><span style=color:#ed9366>=> </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e</span><span style=color:#ed9366>.</span><span style=color:#f07171>into</span><span>())</span><span style=color:#61676ccc>,
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e) </span><span style=color:#fa6e32>if</span><span> e</span><span style=color:#ed9366>.</span><span style=color:#f07171>is_panic</span><span>() </span><span style=color:#ed9366>=> </span><span>{
+</span><span>            </span><span style=color:#f07171>eprintln!</span><span>(</span><span style=color:#86b300>"Task panicked: </span><span style=color:#ff8f40>{:?}</span><span style=color:#86b300>"</span><span style=color:#61676ccc>,</span><span> e)</span><span style=color:#61676ccc>;
+</span><span>            </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(</span><span style=color:#86b300>"Task panic"</span><span style=color:#ed9366>.</span><span style=color:#f07171>into</span><span>())
+</span><span>        }
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e) </span><span style=color:#ed9366>=> </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e</span><span style=color:#ed9366>.</span><span style=color:#f07171>into</span><span>())</span><span style=color:#61676ccc>,
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=custom-panic-hooks-for-application-wide-handling><a aria-label="Anchor link for: custom-panic-hooks-for-application-wide-handling" class=zola-anchor href=#custom-panic-hooks-for-application-wide-handling>Custom Panic Hooks for Application-Wide Handling</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>use </span><span>std</span><span style=color:#ed9366>::</span><span>panic</span><span style=color:#61676ccc>;
+</span><span style=color:#fa6e32>use </span><span>log</span><span style=color:#ed9366>::</span><span>{error</span><span style=color:#61676ccc>,</span><span> info}</span><span style=color:#61676ccc>;
+</span><span>
+</span><span style=color:#fa6e32>fn </span><span style=color:#f29718>setup_panic_hooks</span><span>() {
+</span><span>    panic</span><span style=color:#ed9366>::</span><span>set_hook(</span><span style=color:#55b4d4;font-style:italic>Box</span><span style=color:#ed9366>::</span><span>new(|</span><span style=color:#ff8f40>panic_info</span><span>| {
+</span><span>        </span><span style=color:#f07171>error!</span><span>(</span><span style=color:#86b300>"Application panic occurred!"</span><span>)</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#f07171>error!</span><span>(</span><span style=color:#86b300>"Panic info: {:?}"</span><span style=color:#61676ccc>,</span><span> panic_info)</span><span style=color:#61676ccc>;
+</span><span>        
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// Optional: Send panic info to monitoring service
+</span><span>        </span><span style=color:#f07171>send_to_monitoring</span><span>(panic_info)</span><span style=color:#61676ccc>;
+</span><span>        
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// Optional: Initiate graceful shutdown
+</span><span>        </span><span style=color:#f07171>initiate_shutdown</span><span>()</span><span style=color:#61676ccc>;
+</span><span>    }))</span><span style=color:#61676ccc>;
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>fn </span><span style=color:#f29718>send_to_monitoring</span><span>(</span><span style=color:#ff8f40>panic_info</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span>panic</span><span style=color:#ed9366>::</span><span>PanicInfo) {
+</span><span>    </span><span style=color:#abb0b6;font-style:italic>// Implementation for sending to monitoring service
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>fn </span><span style=color:#f29718>initiate_shutdown</span><span>() {
+</span><span>    </span><span style=color:#abb0b6;font-style:italic>// Implementation for graceful shutdown
+</span><span>}
+</span></code></pre><h2 id=structured-panic-handling-for-large-applications><a aria-label="Anchor link for: structured-panic-handling-for-large-applications" class=zola-anchor href=#structured-panic-handling-for-large-applications>Structured Panic Handling for Large Applications</a></h2><h3 id=1-panic-recovery-middleware><a aria-label="Anchor link for: 1-panic-recovery-middleware" class=zola-anchor href=#1-panic-recovery-middleware>1. Panic Recovery Middleware</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>use </span><span>std</span><span style=color:#ed9366>::</span><span>future</span><span style=color:#ed9366>::</span><span>Future</span><span style=color:#61676ccc>;
+</span><span style=color:#fa6e32>use </span><span>std</span><span style=color:#ed9366>::</span><span>pin</span><span style=color:#ed9366>::</span><span>Pin</span><span style=color:#61676ccc>;
+</span><span>
+</span><span style=color:#fa6e32>pub struct </span><span style=color:#399ee6>PanicRecoveryMiddleware</span><span>&LTS> {
+</span><span>    inner</span><span style=color:#61676ccc>:</span><span> S,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTS> </span><span style=color:#399ee6>PanicRecoveryMiddleware</span><span>&LTS> {
+</span><span>    </span><span style=color:#fa6e32>pub fn </span><span style=color:#f29718>new</span><span>(</span><span style=color:#ff8f40>inner</span><span style=color:#61676ccc>:</span><span> S) </span><span style=color:#61676ccc>-> </span><span style=color:#fa6e32>Self </span><span>{
+</span><span>        </span><span style=color:#fa6e32>Self </span><span>{ inner }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>pub</span><span> async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>handle_request</span><span>&LTF, R>(</span><span style=color:#ed9366>&</span><span style=color:#ff8f40>self</span><span>, </span><span style=color:#ff8f40>fut</span><span style=color:#61676ccc>:</span><span> F) </span><span style=color:#61676ccc>-> </span><span style=color:#55b4d4;font-style:italic>Result</span><span>&LTR, Error>
+</span><span>    </span><span style=color:#fa6e32>where
+</span><span>        F</span><span style=color:#61676ccc>: </span><span>Future&LTOutput = R> + Send + </span><span style=color:#fa6e32>'static</span><span>,
+</span><span>        R</span><span style=color:#61676ccc>:</span><span> Send + </span><span style=color:#fa6e32>'static</span><span>,
+</span><span>    {
+</span><span>        </span><span style=color:#fa6e32>let</span><span> result </span><span style=color:#ed9366>= </span><span>tokio</span><span style=color:#ed9366>::</span><span>spawn(async </span><span style=color:#fa6e32>move </span><span>{
+</span><span>            </span><span style=color:#f07171>catch_unwind</span><span>(AssertUnwindSafe(async </span><span style=color:#fa6e32>move </span><span>{
+</span><span>                fut</span><span style=color:#ed9366>.</span><span>await
+</span><span>            }))</span><span style=color:#ed9366>.</span><span>await
+</span><span>        })</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#ed9366>??</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(result)
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=2-supervisor-pattern-for-long-running-tasks><a aria-label="Anchor link for: 2-supervisor-pattern-for-long-running-tasks" class=zola-anchor href=#2-supervisor-pattern-for-long-running-tasks>2. Supervisor Pattern for Long-Running Tasks</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>pub struct </span><span style=color:#399ee6>TaskSupervisor </span><span>{
+</span><span>    tasks</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span>&LTJoinHandle<()>>,
+</span><span>    shutdown_tx</span><span style=color:#61676ccc>: </span><span>broadcast</span><span style=color:#ed9366>::</span><span>Sender<()>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span style=color:#399ee6>TaskSupervisor </span><span>{
+</span><span>    </span><span style=color:#fa6e32>pub fn </span><span style=color:#f29718>new</span><span>() </span><span style=color:#61676ccc>-> </span><span style=color:#fa6e32>Self </span><span>{
+</span><span>        </span><span style=color:#fa6e32>let </span><span>(shutdown_tx</span><span style=color:#61676ccc>, </span><span style=color:#ed9366>_</span><span>) </span><span style=color:#ed9366>= </span><span>broadcast</span><span style=color:#ed9366>::</span><span>channel(</span><span style=color:#ff8f40>1</span><span>)</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#fa6e32>Self </span><span>{
+</span><span>            tasks</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span style=color:#ed9366>::</span><span>new()</span><span style=color:#61676ccc>,
+</span><span>            shutdown_tx</span><span style=color:#61676ccc>,
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>pub fn </span><span style=color:#f29718>spawn_supervised</span><span>&LTF>(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>, </span><span style=color:#ff8f40>task</span><span style=color:#61676ccc>:</span><span> F)
+</span><span>    </span><span style=color:#fa6e32>where
+</span><span>        F</span><span style=color:#61676ccc>: </span><span>Future&LTOutput = ()> + Send + </span><span style=color:#fa6e32>'static</span><span>,
+</span><span>    {
+</span><span>        </span><span style=color:#fa6e32>let mut</span><span> shutdown_rx </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>shutdown_tx</span><span style=color:#ed9366>.</span><span style=color:#f07171>subscribe</span><span>()</span><span style=color:#61676ccc>;
+</span><span>        
+</span><span>        </span><span style=color:#fa6e32>let</span><span> handle </span><span style=color:#ed9366>= </span><span>tokio</span><span style=color:#ed9366>::</span><span>spawn(async </span><span style=color:#fa6e32>move </span><span>{
+</span><span>            tokio</span><span style=color:#ed9366>::</span><span>select</span><span style=color:#ed9366>! </span><span>{
+</span><span>                </span><span style=color:#ed9366>_ =</span><span> shutdown_rx</span><span style=color:#ed9366>.</span><span style=color:#f07171>recv</span><span>() </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                    </span><span style=color:#f07171>info!</span><span>(</span><span style=color:#86b300>"Task received shutdown signal"</span><span>)</span><span style=color:#61676ccc>;
+</span><span>                }
+</span><span>                result </span><span style=color:#ed9366>= </span><span style=color:#f07171>catch_unwind</span><span>(AssertUnwindSafe(task)) </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                    </span><span style=color:#fa6e32>if let </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e) </span><span style=color:#ed9366>=</span><span> result {
+</span><span>                        </span><span style=color:#f07171>error!</span><span>(</span><span style=color:#86b300>"Task panicked: {:?}"</span><span style=color:#61676ccc>,</span><span> e)</span><span style=color:#61676ccc>;
+</span><span>                    }
+</span><span>                }
+</span><span>            }
+</span><span>        })</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>tasks</span><span style=color:#ed9366>.</span><span style=color:#f07171>push</span><span>(handle)</span><span style=color:#61676ccc>;
+</span><span>    }
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>pub</span><span> async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>shutdown</span><span>(</span><span style=color:#ff8f40>self</span><span>) {
+</span><span>        </span><span style=color:#fa6e32>let </span><span style=color:#ed9366>_ = </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>shutdown_tx</span><span style=color:#ed9366>.</span><span style=color:#f07171>send</span><span>(())</span><span style=color:#61676ccc>;
+</span><span>        
+</span><span>        </span><span style=color:#fa6e32>for</span><span> task </span><span style=color:#ed9366>in </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>tasks {
+</span><span>            </span><span style=color:#fa6e32>if let </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e) </span><span style=color:#ed9366>=</span><span> task</span><span style=color:#ed9366>.</span><span>await {
+</span><span>                </span><span style=color:#f07171>error!</span><span>(</span><span style=color:#86b300>"Error shutting down task: {:?}"</span><span style=color:#61676ccc>,</span><span> e)</span><span style=color:#61676ccc>;
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=3-error-context-and-reporting><a aria-label="Anchor link for: 3-error-context-and-reporting" class=zola-anchor href=#3-error-context-and-reporting>3. Error Context and Reporting</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>derive</span><span>(Debug)]
+</span><span style=color:#fa6e32>pub struct </span><span style=color:#399ee6>PanicContext </span><span>{
+</span><span>    </span><span style=color:#fa6e32>pub </span><span>timestamp</span><span style=color:#61676ccc>: </span><span>DateTime&LTUtc>,
+</span><span>    </span><span style=color:#fa6e32>pub </span><span>thread</span><span style=color:#61676ccc>:</span><span> String,
+</span><span>    </span><span style=color:#fa6e32>pub </span><span>backtrace</span><span style=color:#61676ccc>:</span><span> Backtrace,
+</span><span>    </span><span style=color:#fa6e32>pub </span><span>message</span><span style=color:#61676ccc>:</span><span> String,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span style=color:#399ee6>PanicContext </span><span>{
+</span><span>    </span><span style=color:#fa6e32>pub fn </span><span style=color:#f29718>capture</span><span>(</span><span style=color:#ff8f40>panic_info</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span>panic</span><span style=color:#ed9366>::</span><span>PanicInfo) </span><span style=color:#61676ccc>-> </span><span style=color:#fa6e32>Self </span><span>{
+</span><span>        </span><span style=color:#fa6e32>Self </span><span>{
+</span><span>            timestamp</span><span style=color:#61676ccc>: </span><span>Utc</span><span style=color:#ed9366>::</span><span>now()</span><span style=color:#61676ccc>,
+</span><span>            thread</span><span style=color:#61676ccc>: </span><span>thread</span><span style=color:#ed9366>::</span><span>current()</span><span style=color:#ed9366>.</span><span style=color:#f07171>name</span><span>()
+</span><span>                </span><span style=color:#ed9366>.</span><span style=color:#f07171>unwrap_or</span><span>(</span><span style=color:#86b300>"unnamed"</span><span>)
+</span><span>                </span><span style=color:#ed9366>.</span><span style=color:#f07171>to_string</span><span>()</span><span style=color:#61676ccc>,
+</span><span>            backtrace</span><span style=color:#61676ccc>: </span><span>Backtrace</span><span style=color:#ed9366>::</span><span>capture()</span><span style=color:#61676ccc>,
+</span><span>            message</span><span style=color:#61676ccc>:</span><span> panic_info</span><span style=color:#ed9366>.</span><span style=color:#f07171>to_string</span><span>()</span><span style=color:#61676ccc>,
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>pub</span><span> async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>report</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#ff8f40>self</span><span>) {
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// Implementation for reporting panic context
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// Could send to logging service, monitoring system, etc.
+</span><span>    }
+</span><span>}
+</span></code></pre><h2 id=best-practices-for-panic-prevention><a aria-label="Anchor link for: best-practices-for-panic-prevention" class=zola-anchor href=#best-practices-for-panic-prevention>Best Practices for Panic Prevention</a></h2><h3 id=1-defensive-programming><a aria-label="Anchor link for: 1-defensive-programming" class=zola-anchor href=#1-defensive-programming>1. Defensive Programming</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>fn </span><span style=color:#f29718>defensive_array_access</span><span>(</span><span style=color:#ff8f40>arr</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span>[</span><span style=color:#fa6e32>i32</span><span>], </span><span style=color:#ff8f40>index</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>usize</span><span>) </span><span style=color:#61676ccc>-> </span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>i32</span><span>> {
+</span><span>    arr</span><span style=color:#ed9366>.</span><span style=color:#f07171>get</span><span>(index)</span><span style=color:#ed9366>.</span><span style=color:#f07171>copied</span><span>()
+</span><span>}
+</span><span>
+</span><span>async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>process_data</span><span>(</span><span style=color:#ff8f40>data</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span>[</span><span style=color:#fa6e32>i32</span><span>]) </span><span style=color:#61676ccc>-> </span><span style=color:#55b4d4;font-style:italic>Result</span><span><(), Error> {
+</span><span>    </span><span style=color:#fa6e32>for</span><span> i </span><span style=color:#ed9366>in </span><span style=color:#ff8f40>0</span><span style=color:#ed9366>..</span><span>data</span><span style=color:#ed9366>.</span><span style=color:#f07171>len</span><span>() {
+</span><span>        </span><span style=color:#fa6e32>if let </span><span style=color:#55b4d4;font-style:italic>Some</span><span>(value) </span><span style=color:#ed9366>= </span><span style=color:#f07171>defensive_array_access</span><span>(data</span><span style=color:#61676ccc>,</span><span> i) {
+</span><span>            </span><span style=color:#f07171>process_value</span><span>(value)</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#ed9366>?</span><span style=color:#61676ccc>;
+</span><span>        }
+</span><span>    }
+</span><span>    </span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(())
+</span><span>}
+</span></code></pre><h3 id=2-resource-cleanup-with-drop><a aria-label="Anchor link for: 2-resource-cleanup-with-drop" class=zola-anchor href=#2-resource-cleanup-with-drop>2. Resource Cleanup with Drop</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>struct </span><span style=color:#399ee6>DatabaseConnection </span><span>{
+</span><span>    client</span><span style=color:#61676ccc>:</span><span> Client,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span>Drop </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>DatabaseConnection </span><span>{
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>drop</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>) {
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// Ensure resources are cleaned up even in case of panic
+</span><span>        </span><span style=color:#fa6e32>if let </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e) </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>client</span><span style=color:#ed9366>.</span><span style=color:#f07171>close</span><span>() {
+</span><span>            </span><span style=color:#f07171>error!</span><span>(</span><span style=color:#86b300>"Error closing database connection: {:?}"</span><span style=color:#61676ccc>,</span><span> e)</span><span style=color:#61676ccc>;
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=3-structured-logging-for-better-debugging><a aria-label="Anchor link for: 3-structured-logging-for-better-debugging" class=zola-anchor href=#3-structured-logging-for-better-debugging>3. Structured Logging for Better Debugging</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>use </span><span>tracing</span><span style=color:#ed9366>::</span><span>{info</span><span style=color:#61676ccc>,</span><span> error</span><span style=color:#61676ccc>,</span><span> instrument}</span><span style=color:#61676ccc>;
+</span><span>
+</span><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>instrument</span><span>]
+</span><span>async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>critical_operation</span><span>() </span><span style=color:#61676ccc>-> </span><span style=color:#55b4d4;font-style:italic>Result</span><span><(), Error> {
+</span><span>    </span><span style=color:#f07171>info!</span><span>(</span><span style=color:#86b300>"Starting critical operation"</span><span>)</span><span style=color:#61676ccc>;
+</span><span>    
+</span><span>    </span><span style=color:#fa6e32>if let </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e) </span><span style=color:#ed9366>= </span><span style=color:#f07171>perform_operation</span><span>()</span><span style=color:#ed9366>.</span><span>await {
+</span><span>        </span><span style=color:#f07171>error!</span><span>(error </span><span style=color:#ed9366>= ?</span><span>e</span><span style=color:#61676ccc>, </span><span style=color:#86b300>"Critical operation failed"</span><span>)</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#fa6e32>return </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e)</span><span style=color:#61676ccc>;
+</span><span>    }
+</span><span>    
+</span><span>    </span><span style=color:#f07171>info!</span><span>(</span><span style=color:#86b300>"Critical operation completed successfully"</span><span>)</span><span style=color:#61676ccc>;
+</span><span>    </span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(())
+</span><span>}
+</span></code></pre><h2 id=testing-panic-handling><a aria-label="Anchor link for: testing-panic-handling" class=zola-anchor href=#testing-panic-handling>Testing Panic Handling</a></h2><h3 id=1-unit-tests-for-panic-recovery><a aria-label="Anchor link for: 1-unit-tests-for-panic-recovery" class=zola-anchor href=#1-unit-tests-for-panic-recovery>1. Unit Tests for Panic Recovery</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>cfg</span><span>(test)]
+</span><span style=color:#fa6e32>mod </span><span style=color:#399ee6>tests </span><span>{
+</span><span>    </span><span style=color:#fa6e32>use super</span><span style=color:#ed9366>::*</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>tokio</span><span>::</span><span style=color:#f29718>test</span><span>]
+</span><span>    async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>test_panic_recovery</span><span>() {
+</span><span>        </span><span style=color:#fa6e32>let</span><span> result </span><span style=color:#ed9366>= </span><span style=color:#f07171>catch_unwind</span><span>(AssertUnwindSafe(async {
+</span><span>            </span><span style=color:#f07171>panic!</span><span>(</span><span style=color:#86b300>"Test panic"</span><span>)</span><span style=color:#61676ccc>;
+</span><span>        }))</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>        </span><span style=color:#f07171>assert!</span><span>(result</span><span style=color:#ed9366>.</span><span style=color:#f07171>is_err</span><span>())</span><span style=color:#61676ccc>;
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=2-integration-tests><a aria-label="Anchor link for: 2-integration-tests" class=zola-anchor href=#2-integration-tests>2. Integration Tests</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>tokio</span><span>::</span><span style=color:#f29718>test</span><span>]
+</span><span>async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>test_supervisor_recovery</span><span>() {
+</span><span>    </span><span style=color:#fa6e32>let mut</span><span> supervisor </span><span style=color:#ed9366>= </span><span>TaskSupervisor</span><span style=color:#ed9366>::</span><span>new()</span><span style=color:#61676ccc>;
+</span><span>    
+</span><span>    supervisor</span><span style=color:#ed9366>.</span><span style=color:#f07171>spawn_supervised</span><span>(async {
+</span><span>        </span><span style=color:#f07171>panic!</span><span>(</span><span style=color:#86b300>"Supervised task panic"</span><span>)</span><span style=color:#61676ccc>;
+</span><span>    })</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#abb0b6;font-style:italic>// Wait for some time
+</span><span>    tokio</span><span style=color:#ed9366>::</span><span>time</span><span style=color:#ed9366>::</span><span>sleep(Duration</span><span style=color:#ed9366>::</span><span>from_secs(</span><span style=color:#ff8f40>1</span><span>))</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>    
+</span><span>    </span><span style=color:#abb0b6;font-style:italic>// Verify supervisor state
+</span><span>    supervisor</span><span style=color:#ed9366>.</span><span style=color:#f07171>shutdown</span><span>()</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>}
+</span></code></pre><h2 id=production-considerations><a aria-label="Anchor link for: production-considerations" class=zola-anchor href=#production-considerations>Production Considerations</a></h2><h3 id=1-memory-safety-in-panic-situations><a aria-label="Anchor link for: 1-memory-safety-in-panic-situations" class=zola-anchor href=#1-memory-safety-in-panic-situations>1. Memory Safety in Panic Situations</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>struct </span><span style=color:#399ee6>SafeResource</span><span>&LTT> {
+</span><span>    inner</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Option</span><span>&LTT>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTT> </span><span style=color:#399ee6>SafeResource</span><span>&LTT> {
+</span><span>    </span><span style=color:#fa6e32>pub fn </span><span style=color:#f29718>new</span><span>(</span><span style=color:#ff8f40>resource</span><span style=color:#61676ccc>:</span><span> T) </span><span style=color:#61676ccc>-> </span><span style=color:#fa6e32>Self </span><span>{
+</span><span>        </span><span style=color:#fa6e32>Self </span><span>{
+</span><span>            inner</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Some</span><span>(resource)
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>pub</span><span> async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>use_resource</span><span>&LTF, R>(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>, </span><span style=color:#ff8f40>f</span><span style=color:#61676ccc>:</span><span> F) </span><span style=color:#61676ccc>-> </span><span style=color:#55b4d4;font-style:italic>Result</span><span>&LTR, Error>
+</span><span>    </span><span style=color:#fa6e32>where
+</span><span>        F</span><span style=color:#61676ccc>:</span><span> FnOnce(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut</span><span> T) -> R,
+</span><span>    {
+</span><span>        </span><span style=color:#fa6e32>let</span><span> resource </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>inner</span><span style=color:#ed9366>.</span><span style=color:#f07171>as_mut</span><span>()
+</span><span>            </span><span style=color:#ed9366>.</span><span style=color:#f07171>ok_or_else</span><span>(|| Error</span><span style=color:#ed9366>::</span><span>ResourceUnavailable)</span><span style=color:#ed9366>?</span><span style=color:#61676ccc>;
+</span><span>            
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(</span><span style=color:#f07171>f</span><span>(resource))
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTT> Drop </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>SafeResource</span><span>&LTT> {
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>drop</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>) {
+</span><span>        </span><span style=color:#fa6e32>if let </span><span style=color:#55b4d4;font-style:italic>Some</span><span>(resource) </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>inner</span><span style=color:#ed9366>.</span><span style=color:#f07171>take</span><span>() {
+</span><span>            </span><span style=color:#abb0b6;font-style:italic>// Clean up resource
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=2-monitoring-and-alerting><a aria-label="Anchor link for: 2-monitoring-and-alerting" class=zola-anchor href=#2-monitoring-and-alerting>2. Monitoring and Alerting</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span>async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>monitor_task_health</span><span>(
+</span><span>    </span><span style=color:#ff8f40>task_metrics</span><span style=color:#61676ccc>: </span><span>Arc&LTTaskMetrics>,
+</span><span>    </span><span style=color:#ff8f40>alert_client</span><span style=color:#61676ccc>:</span><span> AlertClient,
+</span><span>) {
+</span><span>    </span><span style=color:#fa6e32>loop </span><span>{
+</span><span>        </span><span style=color:#fa6e32>if</span><span> task_metrics</span><span style=color:#ed9366>.</span><span>panic_count</span><span style=color:#ed9366>.</span><span style=color:#f07171>load</span><span>(Ordering</span><span style=color:#ed9366>::</span><span>Relaxed) </span><span style=color:#ed9366>> </span><span style=color:#ff8f40>0 </span><span>{
+</span><span>            alert_client</span><span style=color:#ed9366>.</span><span style=color:#f07171>send_alert</span><span>(
+</span><span>                AlertLevel</span><span style=color:#ed9366>::</span><span>Critical</span><span style=color:#61676ccc>,
+</span><span>                </span><span style=color:#86b300>"Task panic detected"</span><span style=color:#61676ccc>,
+</span><span>            )</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>        }
+</span><span>        
+</span><span>        tokio</span><span style=color:#ed9366>::</span><span>time</span><span style=color:#ed9366>::</span><span>sleep(Duration</span><span style=color:#ed9366>::</span><span>from_secs(</span><span style=color:#ff8f40>60</span><span>))</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=3-graceful-shutdown-implementation><a aria-label="Anchor link for: 3-graceful-shutdown-implementation" class=zola-anchor href=#3-graceful-shutdown-implementation>3. Graceful Shutdown Implementation</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>pub struct </span><span style=color:#399ee6>Application </span><span>{
+</span><span>    supervisor</span><span style=color:#61676ccc>:</span><span> TaskSupervisor,
+</span><span>    shutdown_signal</span><span style=color:#61676ccc>: </span><span>broadcast</span><span style=color:#ed9366>::</span><span>Receiver<()>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span style=color:#399ee6>Application </span><span>{
+</span><span>    </span><span style=color:#fa6e32>pub</span><span> async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>run</span><span>(</span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>) </span><span style=color:#61676ccc>-> </span><span style=color:#55b4d4;font-style:italic>Result</span><span><(), Error> {
+</span><span>        </span><span style=color:#fa6e32>loop </span><span>{
+</span><span>            tokio</span><span style=color:#ed9366>::</span><span>select</span><span style=color:#ed9366>! </span><span>{
+</span><span>                </span><span style=color:#ed9366>_ = </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>shutdown_signal</span><span style=color:#ed9366>.</span><span style=color:#f07171>recv</span><span>() </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                    </span><span style=color:#f07171>info!</span><span>(</span><span style=color:#86b300>"Shutdown signal received"</span><span>)</span><span style=color:#61676ccc>;
+</span><span>                    </span><span style=color:#fa6e32>break</span><span style=color:#61676ccc>;
+</span><span>                }
+</span><span>                err </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>supervisor</span><span style=color:#ed9366>.</span><span style=color:#f07171>check_tasks</span><span>() </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                    </span><span style=color:#fa6e32>if let </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e) </span><span style=color:#ed9366>=</span><span> err {
+</span><span>                        </span><span style=color:#f07171>error!</span><span>(</span><span style=color:#86b300>"Task error: {:?}"</span><span style=color:#61676ccc>,</span><span> e)</span><span style=color:#61676ccc>;
+</span><span>                        </span><span style=color:#fa6e32>break</span><span style=color:#61676ccc>;
+</span><span>                    }
+</span><span>                }
+</span><span>            }
+</span><span>        }
+</span><span>
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>supervisor</span><span style=color:#ed9366>.</span><span style=color:#f07171>shutdown</span><span>()</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(())
+</span><span>    }
+</span><span>}
+</span></code></pre><h2 id=conclusion><a aria-label="Anchor link for: conclusion" class=zola-anchor href=#conclusion>Conclusion</a></h2><p>Proper panic handling in async Rust requires:<ol><li>Understanding different panic scenarios<li>Implementing appropriate recovery mechanisms<li>Using supervisor patterns for task management<li>Ensuring proper resource cleanup<li>Implementing monitoring and alerting<li>Testing panic handling thoroughly<li>Following best practices for prevention</ol><p>Remember that while panic handling is important, it's better to design your code to avoid panics where possible, using Result and Option types for expected error cases.</section></article></main><div class=giscus></div><script async crossorigin issue-term=pathname repo=not-matthias/apollo src=https://utteranc.es/client.js theme=github-light></script></div>

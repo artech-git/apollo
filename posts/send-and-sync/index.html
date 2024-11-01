@@ -1,0 +1,279 @@
+<!doctype html><html lang=en><head><meta charset=UTF-8><meta content="IE=edge" http-equiv=X-UA-Compatible><meta content="width=device-width,initial-scale=1.0" name=viewport><title>
+         Send and Sync hazard
+        
+    </title><meta content="Send and Sync hazard" property=og:title><meta content="This is an example description" property=og:description><meta content="This is an example description" name=description><link href=/icon/favicon.png rel=icon type=image/png><link href=https://not-matthias.github.io/apollo/fonts.css rel=stylesheet><script src=https://not-matthias.github.io/apollo/js/codeblock.js></script><script src=https://not-matthias.github.io/apollo/js/toc.js></script><script src=https://not-matthias.github.io/apollo/js/note.js></script><script>MathJax={tex:{inlineMath:[[`\$`,`\$`],[`\\\\(`,`\\\\)`]]}}</script><script async id=MathJax-script src=https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js></script><link href=https://not-matthias.github.io/apollo/atom.xml rel=alternate title=artech type=application/atom+xml><link href=https://not-matthias.github.io/apollo/theme/light.css rel=stylesheet><link href=https://not-matthias.github.io/apollo/theme/dark.css id=darkModeStyle rel=stylesheet><script src=https://not-matthias.github.io/apollo/js/themetoggle.js></script><script>setTheme(getSavedTheme())</script><link href=https://not-matthias.github.io/apollo/main.css media=screen rel=stylesheet><body><div class=content><header><div class=main><a href=https://not-matthias.github.io/apollo/>artech</a><div class=socials><a class=social href=https://github.com/artech-git/ rel=me> <img alt=github src=https://not-matthias.github.io/apollo/social_icons/github.svg> </a><a class=social href=https://www.linkedin.com/in/prabhat25/ rel=me> <img alt=linked src=https://not-matthias.github.io/apollo/social_icons/linkedin.svg> </a></div></div><nav><a href=https://not-matthias.github.io/apollo/posts style=margin-left:.5em>/posts</a><a href=https://not-matthias.github.io/apollo/projects style=margin-left:.5em>/projects</a><a href=https://not-matthias.github.io/apollo/courses style=margin-left:.5em>/courses</a><a href=https://not-matthias.github.io/apollo/books style=margin-left:.5em>/books</a><a href=https://not-matthias.github.io/apollo/resume style=margin-left:.5em>/resume</a><a href=https://not-matthias.github.io/apollo/talks style=margin-left:.5em>/talks</a><a href=https://not-matthias.github.io/apollo/certs style=margin-left:.5em>/certs</a><a href=https://not-matthias.github.io/apollo/about style=margin-left:.5em>/about</a> |<a onclick="toggleTheme(); event.preventDefault();" href=# id=dark-mode-toggle> <img alt=Light id=sun-icon src=https://not-matthias.github.io/apollo/feather/sun.svg style=filter:invert()> <img alt=Dark id=moon-icon src=https://not-matthias.github.io/apollo/feather/moon.svg> </a><script>updateItemToggleTheme()</script></nav></header><main><article><div class=title><div class=page-header>Send and Sync hazard<span class=primary-color style=font-size:1.6em>.</span></div><div class=meta>Posted on <time>2024-07-04</time><span class=tags-label> :: Tags:</span><span class=tags> <a class=post-tag href=https://not-matthias.github.io/apollo/tags/documentation/>documentation</a> </span> :: <a rel="noopener noreferrer" href=https://github.com/not-matthias/apollo/tree/main/contentposts/send_and_sync.md target=_blank> Source Code</a></div></div><div class=toc-container><h1 class=toc-title>Table of Contents</h1><ul class=toc-list><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#understanding-send-and-sync-hazards-in-rust-a-comprehensive-guide>Understanding Send and Sync Hazards in Rust: A Comprehensive Guide</a> <ul><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#introduction>Introduction</a><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#foundation-understanding-send-and-sync>Foundation: Understanding Send and Sync</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#basic-definitions>Basic Definitions</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#common-hazards-and-anti-patterns>Common Hazards and Anti-patterns</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#1-incorrect-manual-implementation-of-send-sync>1. Incorrect Manual Implementation of Send/Sync</a><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#2-interior-mutability-hazards>2. Interior Mutability Hazards</a><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#3-async-context-hazards>3. Async Context Hazards</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#complex-hazards-in-large-systems>Complex Hazards in Large Systems</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#1-hidden-sync-requirements>1. Hidden Sync Requirements</a><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#2-callback-hell-with-send-sync-issues>2. Callback Hell with Send/Sync Issues</a><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#3-resource-management-hazards>3. Resource Management Hazards</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#thread-pool-and-executor-hazards>Thread Pool and Executor Hazards</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#1-executor-state-sharing>1. Executor State Sharing</a><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#2-task-cancellation-hazards>2. Task Cancellation Hazards</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#best-practices-and-mitigation-strategies>Best Practices and Mitigation Strategies</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#1-type-level-safety-guards>1. Type-Level Safety Guards</a><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#2-compile-time-verification>2. Compile-Time Verification</a><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#3-runtime-checks>3. Runtime Checks</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#debugging-and-analyzing-send-sync-issues>Debugging and Analyzing Send/Sync Issues</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#1-static-analysis-tools>1. Static Analysis Tools</a><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#2-runtime-diagnostics>2. Runtime Diagnostics</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/send-and-sync/#conclusion>Conclusion</a></ul></ul></div><section class=body><h1 id=understanding-send-and-sync-hazards-in-rust-a-comprehensive-guide><a aria-label="Anchor link for: understanding-send-and-sync-hazards-in-rust-a-comprehensive-guide" class=zola-anchor href=#understanding-send-and-sync-hazards-in-rust-a-comprehensive-guide>Understanding Send and Sync Hazards in Rust: A Comprehensive Guide</a></h1><h2 id=introduction><a aria-label="Anchor link for: introduction" class=zola-anchor href=#introduction>Introduction</a></h2><p>The <code>Send</code> and <code>Sync</code> traits play a crucial role in Rust's concurrency safety model. However, incorrect implementations or assumptions about these traits can lead to serious bugs and undefined behavior, especially in large async codebases.<h2 id=foundation-understanding-send-and-sync><a aria-label="Anchor link for: foundation-understanding-send-and-sync" class=zola-anchor href=#foundation-understanding-send-and-sync>Foundation: Understanding Send and Sync</a></h2><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>pub unsafe</span><span> auto </span><span style=color:#fa6e32>trait </span><span style=color:#399ee6>Send </span><span>{}
+</span><span style=color:#fa6e32>pub unsafe</span><span> auto </span><span style=color:#fa6e32>trait </span><span style=color:#399ee6>Sync </span><span>{}
+</span></code></pre><h3 id=basic-definitions><a aria-label="Anchor link for: basic-definitions" class=zola-anchor href=#basic-definitions>Basic Definitions</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#abb0b6;font-style:italic>// Send: Type can be safely transferred across thread boundaries
+</span><span style=color:#fa6e32>trait </span><span style=color:#399ee6>Send </span><span>{}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// Sync: Type can be safely shared across thread boundaries
+</span><span style=color:#fa6e32>trait </span><span style=color:#399ee6>Sync </span><span>{}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// Relationship: T: Sync implies &T: Send
+</span></code></pre><h2 id=common-hazards-and-anti-patterns><a aria-label="Anchor link for: common-hazards-and-anti-patterns" class=zola-anchor href=#common-hazards-and-anti-patterns>Common Hazards and Anti-patterns</a></h2><h3 id=1-incorrect-manual-implementation-of-send-sync><a aria-label="Anchor link for: 1-incorrect-manual-implementation-of-send-sync" class=zola-anchor href=#1-incorrect-manual-implementation-of-send-sync>1. Incorrect Manual Implementation of Send/Sync</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#abb0b6;font-style:italic>// DANGEROUS: Incorrect implementation
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>UnsafeCounter </span><span>{
+</span><span>    count</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>*mut i32</span><span>,
+</span><span>}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// THIS IS UNSAFE AND INCORRECT
+</span><span style=color:#fa6e32>unsafe impl </span><span>Send </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>UnsafeCounter </span><span>{} </span><span style=color:#abb0b6;font-style:italic>// WRONG!
+</span><span style=color:#fa6e32>unsafe impl </span><span>Sync </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>UnsafeCounter </span><span>{} </span><span style=color:#abb0b6;font-style:italic>// WRONG!
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// The correct way would be:
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>SafeCounter </span><span>{
+</span><span>    count</span><span style=color:#61676ccc>: </span><span>Arc&LTAtomicI32>,
+</span><span>}
+</span><span style=color:#abb0b6;font-style:italic>// This automatically implements Send and Sync safely
+</span></code></pre><h3 id=2-interior-mutability-hazards><a aria-label="Anchor link for: 2-interior-mutability-hazards" class=zola-anchor href=#2-interior-mutability-hazards>2. Interior Mutability Hazards</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>use </span><span>std</span><span style=color:#ed9366>::</span><span>cell</span><span style=color:#ed9366>::</span><span>Cell</span><span style=color:#61676ccc>;
+</span><span style=color:#fa6e32>use </span><span>std</span><span style=color:#ed9366>::</span><span>sync</span><span style=color:#ed9366>::</span><span>Arc</span><span style=color:#61676ccc>;
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// DANGEROUS: Cell is !Sync but wrapped in Arc
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>SharedState </span><span>{
+</span><span>    value</span><span style=color:#61676ccc>: </span><span>Arc&LTCell<</span><span style=color:#fa6e32>i32</span><span>>>, </span><span style=color:#abb0b6;font-style:italic>// This is a trap!
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span style=color:#399ee6>SharedState </span><span>{
+</span><span>    </span><span style=color:#fa6e32>pub fn </span><span style=color:#f29718>increment</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#ff8f40>self</span><span>) {
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// This is undefined behavior when shared across threads
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>value</span><span style=color:#ed9366>.</span><span style=color:#f07171>set</span><span>(</span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>value</span><span style=color:#ed9366>.</span><span style=color:#f07171>get</span><span>() </span><span style=color:#ed9366>+ </span><span style=color:#ff8f40>1</span><span>)</span><span style=color:#61676ccc>;
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// SAFE: Using proper atomic types
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>SafeSharedState </span><span>{
+</span><span>    value</span><span style=color:#61676ccc>: </span><span>Arc&LTAtomicI32>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span style=color:#399ee6>SafeSharedState </span><span>{
+</span><span>    </span><span style=color:#fa6e32>pub fn </span><span style=color:#f29718>increment</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#ff8f40>self</span><span>) {
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>value</span><span style=color:#ed9366>.</span><span style=color:#f07171>fetch_add</span><span>(</span><span style=color:#ff8f40>1</span><span style=color:#61676ccc>, </span><span>Ordering</span><span style=color:#ed9366>::</span><span>SeqCst)</span><span style=color:#61676ccc>;
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=3-async-context-hazards><a aria-label="Anchor link for: 3-async-context-hazards" class=zola-anchor href=#3-async-context-hazards>3. Async Context Hazards</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#abb0b6;font-style:italic>// DANGEROUS: Mixing async and sync code incorrectly
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>AsyncProcessor </span><span>{
+</span><span>    data</span><span style=color:#61676ccc>: </span><span>Arc&LTMutex<</span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#55b4d4;font-style:italic>String</span><span>>>>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span style=color:#399ee6>AsyncProcessor </span><span>{
+</span><span>    </span><span style=color:#abb0b6;font-style:italic>// HAZARD: Blocking in async context
+</span><span>    async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>process</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#ff8f40>self</span><span>) </span><span style=color:#61676ccc>-> </span><span style=color:#55b4d4;font-style:italic>Result</span><span><(), </span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn Error>> {
+</span><span>        </span><span style=color:#fa6e32>let mut</span><span> data </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>data</span><span style=color:#ed9366>.</span><span style=color:#f07171>lock</span><span>()</span><span style=color:#ed9366>.</span><span style=color:#f07171>unwrap</span><span>()</span><span style=color:#61676ccc>; </span><span style=color:#abb0b6;font-style:italic>// Could block!
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// Process data
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(())
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// SAFE: Using async-aware primitives
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>SafeAsyncProcessor </span><span>{
+</span><span>    data</span><span style=color:#61676ccc>: </span><span>Arc<</span><span style=color:#fa6e32>Tokio</span><span style=color:#ed9366>::</span><span>sync</span><span style=color:#ed9366>::</span><span>Mutex<</span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#55b4d4;font-style:italic>String</span><span>>>>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span style=color:#399ee6>SafeAsyncProcessor </span><span>{
+</span><span>    async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>process</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#ff8f40>self</span><span>) </span><span style=color:#61676ccc>-> </span><span style=color:#55b4d4;font-style:italic>Result</span><span><(), </span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn Error>> {
+</span><span>        </span><span style=color:#fa6e32>let mut</span><span> data </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>data</span><span style=color:#ed9366>.</span><span style=color:#f07171>lock</span><span>()</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// Process data
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(())
+</span><span>    }
+</span><span>}
+</span></code></pre><h2 id=complex-hazards-in-large-systems><a aria-label="Anchor link for: complex-hazards-in-large-systems" class=zola-anchor href=#complex-hazards-in-large-systems>Complex Hazards in Large Systems</a></h2><h3 id=1-hidden-sync-requirements><a aria-label="Anchor link for: 1-hidden-sync-requirements" class=zola-anchor href=#1-hidden-sync-requirements>1. Hidden Sync Requirements</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>struct </span><span style=color:#399ee6>ComplexSystem </span><span>{
+</span><span>    cache</span><span style=color:#61676ccc>: </span><span>Arc&LTCache>,
+</span><span>    processor</span><span style=color:#61676ccc>: </span><span>Arc&LTDataProcessor>,
+</span><span>    notifier</span><span style=color:#61676ccc>: </span><span>Arc&LTEventNotifier>,
+</span><span>}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// DANGEROUS: Hidden non-Send type
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>Cache </span><span>{
+</span><span>    entries</span><span style=color:#61676ccc>: </span><span>HashMap<</span><span style=color:#55b4d4;font-style:italic>String</span><span>, Rc&LTCacheEntry>>, </span><span style=color:#abb0b6;font-style:italic>// Rc is !Send
+</span><span>    _phantom</span><span style=color:#61676ccc>: </span><span>PhantomData<</span><span style=color:#fa6e32>*const </span><span>()>, </span><span style=color:#abb0b6;font-style:italic>// !Send and !Sync
+</span><span>}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// SAFE: Explicit Send/Sync bounds
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>SafeCache </span><span>{
+</span><span>    entries</span><span style=color:#61676ccc>: </span><span>Arc&LTDashMap<</span><span style=color:#55b4d4;font-style:italic>String</span><span>, Arc&LTCacheEntry>>>,
+</span><span>}
+</span></code></pre><h3 id=2-callback-hell-with-send-sync-issues><a aria-label="Anchor link for: 2-callback-hell-with-send-sync-issues" class=zola-anchor href=#2-callback-hell-with-send-sync-issues>2. Callback Hell with Send/Sync Issues</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#abb0b6;font-style:italic>// DANGEROUS: Callbacks with unclear Send/Sync requirements
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>EventSystem </span><span>{
+</span><span>    callbacks</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn </span><span style=color:#55b4d4;font-style:italic>Fn</span><span>() </span><span style=color:#ed9366>+ </span><span style=color:#55b4d4;font-style:italic>Send </span><span style=color:#ed9366>+ </span><span style=color:#fa6e32>'static</span><span>>>,
+</span><span>    unsafe_callbacks</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn </span><span style=color:#55b4d4;font-style:italic>Fn</span><span>()>>, </span><span style=color:#abb0b6;font-style:italic>// Missing Send bound!
+</span><span>}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// SAFE: Explicit bounds and type-safe callbacks
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>SafeEventSystem</span><span>&LTF>
+</span><span>where
+</span><span>    F: Fn() </span><span style=color:#ed9366>+ </span><span style=color:#55b4d4;font-style:italic>Send </span><span style=color:#ed9366>+ </span><span style=color:#55b4d4;font-style:italic>Sync </span><span style=color:#ed9366>+ </span><span style=color:#fa6e32>'static</span><span style=color:#61676ccc>,
+</span><span>{
+</span><span>    callbacks</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span>&LTF></span><span style=color:#61676ccc>,
+</span><span>}
+</span></code></pre><h3 id=3-resource-management-hazards><a aria-label="Anchor link for: 3-resource-management-hazards" class=zola-anchor href=#3-resource-management-hazards>3. Resource Management Hazards</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#abb0b6;font-style:italic>// DANGEROUS: Resource cleanup with Send/Sync issues
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>ResourceManager </span><span>{
+</span><span>    resources</span><span style=color:#61676ccc>: </span><span>Arc&LTMutex<</span><span style=color:#55b4d4;font-style:italic>Vec</span><span>&LTResource>>>,
+</span><span>    cleanup_callbacks</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn </span><span style=color:#55b4d4;font-style:italic>FnMut</span><span>() </span><span style=color:#ed9366>+ </span><span style=color:#55b4d4;font-style:italic>Send</span><span>>>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span style=color:#399ee6>ResourceManager </span><span>{
+</span><span>    </span><span style=color:#abb0b6;font-style:italic>// HAZARD: Cleanup in destructor could panic or deadlock
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>cleanup</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>) {
+</span><span>        </span><span style=color:#fa6e32>let</span><span> resources </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>resources</span><span style=color:#ed9366>.</span><span style=color:#f07171>lock</span><span>()</span><span style=color:#ed9366>.</span><span style=color:#f07171>unwrap</span><span>()</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#fa6e32>for</span><span> callback </span><span style=color:#ed9366>in &</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>cleanup_callbacks {
+</span><span>            </span><span style=color:#f07171>callback</span><span>()</span><span style=color:#61676ccc>; </span><span style=color:#abb0b6;font-style:italic>// Could panic or deadlock!
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// SAFE: Structured resource management
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>SafeResourceManager </span><span>{
+</span><span>    resources</span><span style=color:#61676ccc>: </span><span>Arc<</span><span style=color:#fa6e32>Tokio</span><span style=color:#ed9366>::</span><span>sync</span><span style=color:#ed9366>::</span><span>Mutex<</span><span style=color:#55b4d4;font-style:italic>Vec</span><span>&LTResource>>>,
+</span><span>    cleanup_callbacks</span><span style=color:#61676ccc>: </span><span>Arc<</span><span style=color:#fa6e32>Tokio</span><span style=color:#ed9366>::</span><span>sync</span><span style=color:#ed9366>::</span><span>Mutex<</span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn </span><span style=color:#55b4d4;font-style:italic>FnMut</span><span>() </span><span style=color:#ed9366>+ </span><span style=color:#55b4d4;font-style:italic>Send </span><span style=color:#ed9366>+ </span><span style=color:#55b4d4;font-style:italic>Sync</span><span>>>>>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span style=color:#399ee6>SafeResourceManager </span><span>{
+</span><span>    async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>cleanup</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>) {
+</span><span>        </span><span style=color:#fa6e32>let mut</span><span> resources </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>resources</span><span style=color:#ed9366>.</span><span style=color:#f07171>lock</span><span>()</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#fa6e32>let mut</span><span> callbacks </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>cleanup_callbacks</span><span style=color:#ed9366>.</span><span style=color:#f07171>lock</span><span>()</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>        
+</span><span>        </span><span style=color:#fa6e32>for</span><span> callback </span><span style=color:#ed9366>in</span><span> callbacks</span><span style=color:#ed9366>.</span><span style=color:#f07171>iter_mut</span><span>() {
+</span><span>            </span><span style=color:#abb0b6;font-style:italic>// Handle cleanup errors gracefully
+</span><span>            </span><span style=color:#fa6e32>if let </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e) </span><span style=color:#ed9366>= </span><span>std</span><span style=color:#ed9366>::</span><span>panic</span><span style=color:#ed9366>::</span><span>catch_unwind(std</span><span style=color:#ed9366>::</span><span>panic</span><span style=color:#ed9366>::</span><span>AssertUnwindSafe(|| {
+</span><span>                </span><span style=color:#f07171>callback</span><span>()</span><span style=color:#61676ccc>;
+</span><span>            })) {
+</span><span>                log</span><span style=color:#ed9366>::</span><span>error</span><span style=color:#ed9366>!</span><span>(</span><span style=color:#86b300>"Cleanup callback panicked: {:?}"</span><span style=color:#61676ccc>,</span><span> e)</span><span style=color:#61676ccc>;
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h2 id=thread-pool-and-executor-hazards><a aria-label="Anchor link for: thread-pool-and-executor-hazards" class=zola-anchor href=#thread-pool-and-executor-hazards>Thread Pool and Executor Hazards</a></h2><h3 id=1-executor-state-sharing><a aria-label="Anchor link for: 1-executor-state-sharing" class=zola-anchor href=#1-executor-state-sharing>1. Executor State Sharing</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#abb0b6;font-style:italic>// DANGEROUS: Incorrect executor state sharing
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>AsyncExecutor </span><span>{
+</span><span>    state</span><span style=color:#61676ccc>: </span><span>Arc&LTMutex&LTExecutorState>>,
+</span><span>    runtime</span><span style=color:#61676ccc>: </span><span>tokio</span><span style=color:#ed9366>::</span><span>runtime</span><span style=color:#ed9366>::</span><span>Runtime,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>ExecutorState </span><span>{
+</span><span>    tasks</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn Future&LTOutput = ()> </span><span style=color:#ed9366>+ </span><span style=color:#55b4d4;font-style:italic>Send</span><span>>>,
+</span><span>    callbacks</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn </span><span style=color:#55b4d4;font-style:italic>Fn</span><span>() </span><span style=color:#ed9366>+ </span><span style=color:#55b4d4;font-style:italic>Send</span><span>>>,
+</span><span>}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// HAZARD: Could deadlock or cause undefined behavior
+</span><span style=color:#fa6e32>impl </span><span style=color:#399ee6>AsyncExecutor </span><span>{
+</span><span>    async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>execute</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#ff8f40>self</span><span>) {
+</span><span>        </span><span style=color:#fa6e32>let</span><span> state </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>state</span><span style=color:#ed9366>.</span><span style=color:#f07171>lock</span><span>()</span><span style=color:#ed9366>.</span><span style=color:#f07171>unwrap</span><span>()</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#fa6e32>for</span><span> task </span><span style=color:#ed9366>in &</span><span>state</span><span style=color:#ed9366>.</span><span>tasks {
+</span><span>            </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>runtime</span><span style=color:#ed9366>.</span><span style=color:#f07171>spawn</span><span>(task)</span><span style=color:#61676ccc>; </span><span style=color:#abb0b6;font-style:italic>// Could deadlock!
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// SAFE: Proper async-aware state management
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>SafeAsyncExecutor </span><span>{
+</span><span>    state</span><span style=color:#61676ccc>: </span><span>Arc<</span><span style=color:#fa6e32>Tokio</span><span style=color:#ed9366>::</span><span>sync</span><span style=color:#ed9366>::</span><span>Mutex&LTExecutorState>>,
+</span><span>    runtime</span><span style=color:#61676ccc>: </span><span>tokio</span><span style=color:#ed9366>::</span><span>runtime</span><span style=color:#ed9366>::</span><span>Runtime,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span style=color:#399ee6>SafeAsyncExecutor </span><span>{
+</span><span>    async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>execute</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#ff8f40>self</span><span>) {
+</span><span>        </span><span style=color:#fa6e32>let mut</span><span> state </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>state</span><span style=color:#ed9366>.</span><span style=color:#f07171>lock</span><span>()</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#fa6e32>for</span><span> task </span><span style=color:#ed9366>in</span><span> state</span><span style=color:#ed9366>.</span><span>tasks</span><span style=color:#ed9366>.</span><span style=color:#f07171>drain</span><span>(</span><span style=color:#ed9366>..</span><span>) {
+</span><span>            </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>runtime</span><span style=color:#ed9366>.</span><span style=color:#f07171>spawn</span><span>(task)</span><span style=color:#61676ccc>;
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=2-task-cancellation-hazards><a aria-label="Anchor link for: 2-task-cancellation-hazards" class=zola-anchor href=#2-task-cancellation-hazards>2. Task Cancellation Hazards</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#abb0b6;font-style:italic>// DANGEROUS: Incorrect task cancellation
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>TaskManager </span><span>{
+</span><span>    tasks</span><span style=color:#61676ccc>: </span><span>Arc&LTMutex&LTHashMap&LTTaskId, JoinHandle<()>>>>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span style=color:#399ee6>TaskManager </span><span>{
+</span><span>    </span><span style=color:#abb0b6;font-style:italic>// HAZARD: Deadlock potential during cleanup
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>cancel_all</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#ff8f40>self</span><span>) {
+</span><span>        </span><span style=color:#fa6e32>let</span><span> tasks </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>tasks</span><span style=color:#ed9366>.</span><span style=color:#f07171>lock</span><span>()</span><span style=color:#ed9366>.</span><span style=color:#f07171>unwrap</span><span>()</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#fa6e32>for </span><span>(</span><span style=color:#ed9366>_</span><span style=color:#61676ccc>,</span><span> handle) </span><span style=color:#ed9366>in</span><span> tasks</span><span style=color:#ed9366>.</span><span style=color:#f07171>iter</span><span>() {
+</span><span>            handle</span><span style=color:#ed9366>.</span><span style=color:#f07171>abort</span><span>()</span><span style=color:#61676ccc>; </span><span style=color:#abb0b6;font-style:italic>// Could deadlock if task holds locks!
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// SAFE: Graceful task cancellation
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>SafeTaskManager </span><span>{
+</span><span>    tasks</span><span style=color:#61676ccc>: </span><span>Arc<</span><span style=color:#fa6e32>Tokio</span><span style=color:#ed9366>::</span><span>sync</span><span style=color:#ed9366>::</span><span>Mutex&LTHashMap&LTTaskId, JoinHandle<()>>>>,
+</span><span>    shutdown_signal</span><span style=color:#61676ccc>: </span><span>broadcast</span><span style=color:#ed9366>::</span><span>Sender<()>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span style=color:#399ee6>SafeTaskManager </span><span>{
+</span><span>    async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>cancel_all</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#ff8f40>self</span><span>) {
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// Signal all tasks to shut down
+</span><span>        </span><span style=color:#fa6e32>let </span><span style=color:#ed9366>_ = </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>shutdown_signal</span><span style=color:#ed9366>.</span><span style=color:#f07171>send</span><span>(())</span><span style=color:#61676ccc>;
+</span><span>        
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// Wait for tasks with timeout
+</span><span>        </span><span style=color:#fa6e32>let mut</span><span> tasks </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>tasks</span><span style=color:#ed9366>.</span><span style=color:#f07171>lock</span><span>()</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#fa6e32>for </span><span>(</span><span style=color:#ed9366>_</span><span style=color:#61676ccc>,</span><span> handle) </span><span style=color:#ed9366>in</span><span> tasks</span><span style=color:#ed9366>.</span><span style=color:#f07171>drain</span><span>() {
+</span><span>            tokio</span><span style=color:#ed9366>::</span><span>select</span><span style=color:#ed9366>! </span><span>{
+</span><span>                </span><span style=color:#ed9366>_ =</span><span> handle </span><span style=color:#ed9366>=> </span><span>{}</span><span style=color:#61676ccc>,
+</span><span>                </span><span style=color:#ed9366>_ = </span><span>tokio</span><span style=color:#ed9366>::</span><span>time</span><span style=color:#ed9366>::</span><span>sleep(Duration</span><span style=color:#ed9366>::</span><span>from_secs(</span><span style=color:#ff8f40>5</span><span>)) </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                    handle</span><span style=color:#ed9366>.</span><span style=color:#f07171>abort</span><span>()</span><span style=color:#61676ccc>;
+</span><span>                }
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h2 id=best-practices-and-mitigation-strategies><a aria-label="Anchor link for: best-practices-and-mitigation-strategies" class=zola-anchor href=#best-practices-and-mitigation-strategies>Best Practices and Mitigation Strategies</a></h2><h3 id=1-type-level-safety-guards><a aria-label="Anchor link for: 1-type-level-safety-guards" class=zola-anchor href=#1-type-level-safety-guards>1. Type-Level Safety Guards</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>use </span><span>std</span><span style=color:#ed9366>::</span><span>marker</span><span style=color:#ed9366>::</span><span>PhantomData</span><span style=color:#61676ccc>;
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// Enforce Send/Sync at type level
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>ThreadSafeWrapper</span><span>&LTT</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Send </span><span style=color:#ed9366>+ </span><span style=color:#55b4d4;font-style:italic>Sync</span><span>> {
+</span><span>    inner</span><span style=color:#61676ccc>:</span><span> T,
+</span><span>    _marker</span><span style=color:#61676ccc>: </span><span>PhantomData<</span><span style=color:#fa6e32>*const </span><span>()>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTT</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Send </span><span style=color:#ed9366>+ </span><span style=color:#55b4d4;font-style:italic>Sync</span><span>> </span><span style=color:#399ee6>ThreadSafeWrapper</span><span>&LTT> {
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>new</span><span>(</span><span style=color:#ff8f40>inner</span><span style=color:#61676ccc>:</span><span> T) </span><span style=color:#61676ccc>-> </span><span style=color:#fa6e32>Self </span><span>{
+</span><span>        </span><span style=color:#fa6e32>Self </span><span>{
+</span><span>            inner</span><span style=color:#61676ccc>,
+</span><span>            _marker</span><span style=color:#61676ccc>:</span><span> PhantomData</span><span style=color:#61676ccc>,
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=2-compile-time-verification><a aria-label="Anchor link for: 2-compile-time-verification" class=zola-anchor href=#2-compile-time-verification>2. Compile-Time Verification</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>cfg</span><span>(test)]
+</span><span style=color:#fa6e32>mod </span><span style=color:#399ee6>tests </span><span>{
+</span><span>    </span><span style=color:#fa6e32>use </span><span>static_assertions</span><span style=color:#ed9366>::</span><span>{assert_impl_all</span><span style=color:#61676ccc>,</span><span> assert_not_impl_any}</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#abb0b6;font-style:italic>// Verify type safety at compile time
+</span><span>    </span><span style=color:#f07171>assert_impl_all!</span><span>(SafeType</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Send</span><span style=color:#61676ccc>, </span><span style=color:#55b4d4;font-style:italic>Sync</span><span>)</span><span style=color:#61676ccc>;
+</span><span>    </span><span style=color:#f07171>assert_not_impl_any!</span><span>(UnsafeType</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Send</span><span style=color:#61676ccc>, </span><span style=color:#55b4d4;font-style:italic>Sync</span><span>)</span><span style=color:#61676ccc>;
+</span><span>}
+</span></code></pre><h3 id=3-runtime-checks><a aria-label="Anchor link for: 3-runtime-checks" class=zola-anchor href=#3-runtime-checks>3. Runtime Checks</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>use </span><span>std</span><span style=color:#ed9366>::</span><span>any</span><span style=color:#ed9366>::</span><span>Any</span><span style=color:#61676ccc>;
+</span><span>
+</span><span style=color:#fa6e32>fn </span><span style=color:#f29718>verify_send_sync</span><span>&LTT</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Send </span><span style=color:#ed9366>+ </span><span style=color:#55b4d4;font-style:italic>Sync </span><span style=color:#ed9366>+</span><span> Any>() {
+</span><span>    </span><span style=color:#f07171>println!</span><span>(</span><span style=color:#86b300>"Type </span><span style=color:#ff8f40>{}</span><span style=color:#86b300> is Send + Sync"</span><span style=color:#61676ccc>, </span><span>std</span><span style=color:#ed9366>::</span><span>any</span><span style=color:#ed9366>::</span><span>type_name</span><span style=color:#ed9366>::</span><span>&LTT>())</span><span style=color:#61676ccc>;
+</span><span>}
+</span><span>
+</span><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>test</span><span>]
+</span><span style=color:#fa6e32>fn </span><span style=color:#f29718>verify_types</span><span>() {
+</span><span>    verify_send_sync</span><span style=color:#ed9366>::</span><span>&LTSafeType>()</span><span style=color:#61676ccc>;
+</span><span>    </span><span style=color:#abb0b6;font-style:italic>// verify_send_sync::&LTUnsafeType>(); // Won't compile
+</span><span>}
+</span></code></pre><h2 id=debugging-and-analyzing-send-sync-issues><a aria-label="Anchor link for: debugging-and-analyzing-send-sync-issues" class=zola-anchor href=#debugging-and-analyzing-send-sync-issues>Debugging and Analyzing Send/Sync Issues</a></h2><h3 id=1-static-analysis-tools><a aria-label="Anchor link for: 1-static-analysis-tools" class=zola-anchor href=#1-static-analysis-tools>1. Static Analysis Tools</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>derive</span><span>(Debug)]
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>DataStructure </span><span>{
+</span><span>    </span><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>allow</span><span>(dead_code)]
+</span><span>    data</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#55b4d4;font-style:italic>String</span><span>>,
+</span><span>}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// Use clippy to catch potential issues
+</span><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>warn</span><span>(clippy::missing_safety_doc)]
+</span><span style=color:#fa6e32>unsafe impl </span><span>Send </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>DataStructure </span><span>{} </span><span style=color:#abb0b6;font-style:italic>// Clippy will warn about missing safety documentation
+</span></code></pre><h3 id=2-runtime-diagnostics><a aria-label="Anchor link for: 2-runtime-diagnostics" class=zola-anchor href=#2-runtime-diagnostics>2. Runtime Diagnostics</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>use </span><span>tracing</span><span style=color:#ed9366>::</span><span>{info</span><span style=color:#61676ccc>,</span><span> error</span><span style=color:#61676ccc>,</span><span> warn}</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>monitor_thread_safety</span><span>&LTT</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Send </span><span style=color:#ed9366>+ </span><span style=color:#55b4d4;font-style:italic>Sync</span><span>>(</span><span style=color:#ff8f40>value</span><span style=color:#61676ccc>:</span><span> T) {
+</span><span>    </span><span style=color:#fa6e32>let</span><span> type_name </span><span style=color:#ed9366>= </span><span>std</span><span style=color:#ed9366>::</span><span>any</span><span style=color:#ed9366>::</span><span>type_name</span><span style=color:#ed9366>::</span><span>&LTT>()</span><span style=color:#61676ccc>;
+</span><span>    
+</span><span>    </span><span style=color:#f07171>info!</span><span>(</span><span style=color:#86b300>"Monitoring thread safety for type: {}"</span><span style=color:#61676ccc>,</span><span> type_name)</span><span style=color:#61676ccc>;
+</span><span>    
+</span><span>    </span><span style=color:#fa6e32>if </span><span>std</span><span style=color:#ed9366>::</span><span>mem</span><span style=color:#ed9366>::</span><span>size_of</span><span style=color:#ed9366>::</span><span>&LTT>() </span><span style=color:#ed9366>> </span><span style=color:#ff8f40>512 </span><span>{
+</span><span>        </span><span style=color:#f07171>warn!</span><span>(</span><span style=color:#86b300>"Large type may cause performance issues when sent between threads"</span><span>)</span><span style=color:#61676ccc>;
+</span><span>    }
+</span><span>    
+</span><span>    </span><span style=color:#abb0b6;font-style:italic>// Monitor for potential issues
+</span><span>    tokio</span><span style=color:#ed9366>::</span><span>spawn(async </span><span style=color:#fa6e32>move </span><span>{
+</span><span>        </span><span style=color:#fa6e32>if let </span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e) </span><span style=color:#ed9366>= </span><span style=color:#f07171>process_value</span><span>(value)</span><span style=color:#ed9366>.</span><span>await {
+</span><span>            </span><span style=color:#f07171>error!</span><span>(</span><span style=color:#86b300>"Thread safety violation: {:?}"</span><span style=color:#61676ccc>,</span><span> e)</span><span style=color:#61676ccc>;
+</span><span>        }
+</span><span>    })</span><span style=color:#61676ccc>;
+</span><span>}
+</span></code></pre><h2 id=conclusion><a aria-label="Anchor link for: conclusion" class=zola-anchor href=#conclusion>Conclusion</a></h2><p>When working with Send and Sync traits in large async Rust codebases:<ol><li><p><strong>Always Consider Thread Safety</strong></p> <ul><li>Verify Send/Sync implementations<li>Use appropriate synchronization primitives<li>Consider async-aware alternatives</ul><li><p><strong>Design for Safety</strong></p> <ul><li>Use type-level guarantees<li>Implement proper resource cleanup<li>Handle task cancellation gracefully</ul><li><p><strong>Monitor and Debug</strong></p> <ul><li>Use static analysis tools<li>Implement runtime diagnostics<li>Test thoroughly for concurrency issues</ul><li><p><strong>Follow Best Practices</strong></p> <ul><li>Use async-aware primitives<li>Implement proper error handling<li>Consider performance implications</ul><li><p><strong>Documentation</strong></p> <ul><li>Document thread safety requirements<li>Explain synchronization strategies<li>Detail potential hazards</ul></ol><p>Remember that incorrect Send/Sync implementations can lead to subtle and dangerous bugs. Always err on the side of caution and thoroughly test concurrent code.</section></article></main><div class=giscus></div><script async crossorigin issue-term=pathname repo=not-matthias/apollo src=https://utteranc.es/client.js theme=github-light></script></div>

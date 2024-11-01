@@ -1,0 +1,418 @@
+<!doctype html><html lang=en><head><meta charset=UTF-8><meta content="IE=edge" http-equiv=X-UA-Compatible><meta content="width=device-width,initial-scale=1.0" name=viewport><title>
+         Understanding stream in rust
+        
+    </title><meta content="Understanding stream in rust" property=og:title><meta content="This is an example description" property=og:description><meta content="This is an example description" name=description><link href=/icon/favicon.png rel=icon type=image/png><link href=https://not-matthias.github.io/apollo/fonts.css rel=stylesheet><script src=https://not-matthias.github.io/apollo/js/codeblock.js></script><script src=https://not-matthias.github.io/apollo/js/toc.js></script><script src=https://not-matthias.github.io/apollo/js/note.js></script><script>MathJax={tex:{inlineMath:[[`\$`,`\$`],[`\\\\(`,`\\\\)`]]}}</script><script async id=MathJax-script src=https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js></script><link href=https://not-matthias.github.io/apollo/atom.xml rel=alternate title=artech type=application/atom+xml><link href=https://not-matthias.github.io/apollo/theme/light.css rel=stylesheet><link href=https://not-matthias.github.io/apollo/theme/dark.css id=darkModeStyle rel=stylesheet><script src=https://not-matthias.github.io/apollo/js/themetoggle.js></script><script>setTheme(getSavedTheme())</script><link href=https://not-matthias.github.io/apollo/main.css media=screen rel=stylesheet><body><div class=content><header><div class=main><a href=https://not-matthias.github.io/apollo/>artech</a><div class=socials><a class=social href=https://github.com/artech-git/ rel=me> <img alt=github src=https://not-matthias.github.io/apollo/social_icons/github.svg> </a><a class=social href=https://www.linkedin.com/in/prabhat25/ rel=me> <img alt=linked src=https://not-matthias.github.io/apollo/social_icons/linkedin.svg> </a></div></div><nav><a href=https://not-matthias.github.io/apollo/posts style=margin-left:.5em>/posts</a><a href=https://not-matthias.github.io/apollo/projects style=margin-left:.5em>/projects</a><a href=https://not-matthias.github.io/apollo/courses style=margin-left:.5em>/courses</a><a href=https://not-matthias.github.io/apollo/books style=margin-left:.5em>/books</a><a href=https://not-matthias.github.io/apollo/resume style=margin-left:.5em>/resume</a><a href=https://not-matthias.github.io/apollo/talks style=margin-left:.5em>/talks</a><a href=https://not-matthias.github.io/apollo/certs style=margin-left:.5em>/certs</a><a href=https://not-matthias.github.io/apollo/about style=margin-left:.5em>/about</a> |<a onclick="toggleTheme(); event.preventDefault();" href=# id=dark-mode-toggle> <img alt=Light id=sun-icon src=https://not-matthias.github.io/apollo/feather/sun.svg style=filter:invert()> <img alt=Dark id=moon-icon src=https://not-matthias.github.io/apollo/feather/moon.svg> </a><script>updateItemToggleTheme()</script></nav></header><main><article><div class=title><div class=page-header>Understanding stream in rust<span class=primary-color style=font-size:1.6em>.</span></div><div class=meta>Posted on <time>2024-07-03</time><span class=tags-label> :: Tags:</span><span class=tags> <a class=post-tag href=https://not-matthias.github.io/apollo/tags/low-level-design/>low-level design</a> </span> :: <a rel="noopener noreferrer" href=https://github.com/not-matthias/apollo/tree/main/contentposts/streams_in_rust.md target=_blank> Source Code</a></div></div><div class=toc-container><h1 class=toc-title>Table of Contents</h1><ul class=toc-list><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#comprehensive-guide-to-futures-stream-in-rust>Comprehensive Guide to Futures::Stream in Rust</a> <ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#introduction>Introduction</a><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#basic-concepts>Basic Concepts</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#stream-trait-definition>Stream Trait Definition</a><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#key-differences-from-iterator>Key Differences from Iterator</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#implementation-patterns>Implementation Patterns</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#1-basic-stream-implementation>1. Basic Stream Implementation</a><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#2-buffered-stream-implementation>2. Buffered Stream Implementation</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#advanced-stream-patterns>Advanced Stream Patterns</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#1-back-pressure-implementation>1. Back-Pressure Implementation</a><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#2-rate-limited-stream>2. Rate-Limited Stream</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#performance-considerations>Performance Considerations</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#1-memory-management>1. Memory Management</a><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#2-cpu-bound-operations>2. CPU-Bound Operations</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#error-handling>Error Handling</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#1-recoverable-errors>1. Recoverable Errors</a><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#2-unrecoverable-errors>2. Unrecoverable Errors</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#testing-strategies>Testing Strategies</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#1-mock-streams>1. Mock Streams</a><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#2-property-based-testing>2. Property-Based Testing</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#best-practices-and-optimizations>Best Practices and Optimizations</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#1-stream-fusion>1. Stream Fusion</a><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#2-batch-processing>2. Batch Processing</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#pros-and-cons>Pros and Cons</a></li><ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#pros>Pros:</a><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#cons>Cons:</a></ul><li><a href=https://not-matthias.github.io/apollo/posts/streams-in-rust/#conclusion>Conclusion</a></ul></ul></div><section class=body><h1 id=comprehensive-guide-to-futures-stream-in-rust><a aria-label="Anchor link for: comprehensive-guide-to-futures-stream-in-rust" class=zola-anchor href=#comprehensive-guide-to-futures-stream-in-rust>Comprehensive Guide to Futures::Stream in Rust</a></h1><h2 id=introduction><a aria-label="Anchor link for: introduction" class=zola-anchor href=#introduction>Introduction</a></h2><p><code>futures::Stream</code> is a fundamental abstraction in asynchronous Rust programming that represents a sequence of asynchronous values. This guide explores its design, implementation patterns, and practical considerations.<h2 id=basic-concepts><a aria-label="Anchor link for: basic-concepts" class=zola-anchor href=#basic-concepts>Basic Concepts</a></h2><h3 id=stream-trait-definition><a aria-label="Anchor link for: stream-trait-definition" class=zola-anchor href=#stream-trait-definition>Stream Trait Definition</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>pub trait </span><span style=color:#399ee6>Stream </span><span>{
+</span><span>    </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item</span><span style=color:#61676ccc>;
+</span><span>    
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>poll_next</span><span>(
+</span><span>        </span><span style=color:#ff8f40>self</span><span>: Pin<</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut Self</span><span>>, 
+</span><span>        </span><span style=color:#ff8f40>cx</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span>Context<'</span><span style=color:#ed9366>_</span><span>>
+</span><span>    ) </span><span style=color:#61676ccc>-> </span><span>Poll<</span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item>></span><span style=color:#61676ccc>;
+</span><span>}
+</span></code></pre><h3 id=key-differences-from-iterator><a aria-label="Anchor link for: key-differences-from-iterator" class=zola-anchor href=#key-differences-from-iterator>Key Differences from Iterator</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#abb0b6;font-style:italic>// Iterator (synchronous)
+</span><span style=color:#fa6e32>trait </span><span style=color:#399ee6>Iterator </span><span>{
+</span><span>    </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item</span><span style=color:#61676ccc>;
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>next</span><span>(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>) </span><span style=color:#61676ccc>-> </span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item></span><span style=color:#61676ccc>;
+</span><span>}
+</span><span>
+</span><span style=color:#abb0b6;font-style:italic>// Stream (asynchronous)
+</span><span style=color:#fa6e32>trait </span><span style=color:#399ee6>Stream </span><span>{
+</span><span>    </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item</span><span style=color:#61676ccc>;
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>poll_next</span><span>(</span><span style=color:#ff8f40>self</span><span>: Pin<</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut Self</span><span>>, </span><span style=color:#ff8f40>cx</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span>Context<'</span><span style=color:#ed9366>_</span><span>>) 
+</span><span>        </span><span style=color:#61676ccc>-> </span><span>Poll<</span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item>></span><span style=color:#61676ccc>;
+</span><span>}
+</span></code></pre><h2 id=implementation-patterns><a aria-label="Anchor link for: implementation-patterns" class=zola-anchor href=#implementation-patterns>Implementation Patterns</a></h2><h3 id=1-basic-stream-implementation><a aria-label="Anchor link for: 1-basic-stream-implementation" class=zola-anchor href=#1-basic-stream-implementation>1. Basic Stream Implementation</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>use </span><span>futures</span><span style=color:#ed9366>::</span><span>{Stream</span><span style=color:#61676ccc>,</span><span> StreamExt}</span><span style=color:#61676ccc>;
+</span><span style=color:#fa6e32>use </span><span>std</span><span style=color:#ed9366>::</span><span>pin</span><span style=color:#ed9366>::</span><span>Pin</span><span style=color:#61676ccc>;
+</span><span style=color:#fa6e32>use </span><span>std</span><span style=color:#ed9366>::</span><span>task</span><span style=color:#ed9366>::</span><span>{Context</span><span style=color:#61676ccc>,</span><span> Poll}</span><span style=color:#61676ccc>;
+</span><span>
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>CounterStream </span><span>{
+</span><span>    current</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>u64</span><span>,
+</span><span>    max</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>u64</span><span>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl </span><span>Stream </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>CounterStream </span><span>{
+</span><span>    </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item </span><span style=color:#ed9366>= </span><span style=color:#fa6e32>u64</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>poll_next</span><span>(
+</span><span>        </span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>: Pin<</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut Self</span><span>>, 
+</span><span>        </span><span style=color:#ff8f40>_cx</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span>Context<'</span><span style=color:#ed9366>_</span><span>>
+</span><span>    ) </span><span style=color:#61676ccc>-> </span><span>Poll<</span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item>> {
+</span><span>        </span><span style=color:#fa6e32>if </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current </span><span style=color:#ed9366>>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>max {
+</span><span>            </span><span style=color:#fa6e32>return </span><span>Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>)</span><span style=color:#61676ccc>;
+</span><span>        }
+</span><span>        
+</span><span>        </span><span style=color:#fa6e32>let</span><span> result </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current </span><span style=color:#ed9366>+= </span><span style=color:#ff8f40>1</span><span style=color:#61676ccc>;
+</span><span>        Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(result))
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=2-buffered-stream-implementation><a aria-label="Anchor link for: 2-buffered-stream-implementation" class=zola-anchor href=#2-buffered-stream-implementation>2. Buffered Stream Implementation</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>use </span><span>std</span><span style=color:#ed9366>::</span><span>collections</span><span style=color:#ed9366>::</span><span>VecDeque</span><span style=color:#61676ccc>;
+</span><span>
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>BufferedStream</span><span>&LTT> {
+</span><span>    buffer</span><span style=color:#61676ccc>: </span><span>VecDeque&LTT>,
+</span><span>    source</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn Stream&LTItem = T> </span><span style=color:#ed9366>+</span><span> Unpin>,
+</span><span>    capacity</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>usize</span><span>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTT> </span><span style=color:#399ee6>BufferedStream</span><span>&LTT> {
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>new</span><span>(</span><span style=color:#ff8f40>source</span><span style=color:#61676ccc>:</span><span> impl Stream&LTItem = T> + Unpin + </span><span style=color:#fa6e32>'static</span><span>, </span><span style=color:#ff8f40>capacity</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>usize</span><span>) </span><span style=color:#61676ccc>-> </span><span style=color:#fa6e32>Self </span><span>{
+</span><span>        </span><span style=color:#fa6e32>Self </span><span>{
+</span><span>            buffer</span><span style=color:#61676ccc>: </span><span>VecDeque</span><span style=color:#ed9366>::</span><span>with_capacity(capacity)</span><span style=color:#61676ccc>,
+</span><span>            source</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Box</span><span style=color:#ed9366>::</span><span>new(source)</span><span style=color:#61676ccc>,
+</span><span>            capacity</span><span style=color:#61676ccc>,
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTT> Stream </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>BufferedStream</span><span>&LTT> {
+</span><span>    </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item </span><span style=color:#ed9366>=</span><span> T</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>poll_next</span><span>(
+</span><span>        </span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>: Pin<</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut Self</span><span>>, 
+</span><span>        </span><span style=color:#ff8f40>cx</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span>Context<'</span><span style=color:#ed9366>_</span><span>>
+</span><span>    ) </span><span style=color:#61676ccc>-> </span><span>Poll<</span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item>> {
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// Try to fill buffer
+</span><span>        </span><span style=color:#fa6e32>while </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>buffer</span><span style=color:#ed9366>.</span><span style=color:#f07171>len</span><span>() </span><span style=color:#ed9366>< </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>capacity {
+</span><span>            </span><span style=color:#fa6e32>match </span><span>Pin</span><span style=color:#ed9366>::</span><span>new(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>source)</span><span style=color:#ed9366>.</span><span style=color:#f07171>poll_next</span><span>(cx) {
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(item)) </span><span style=color:#ed9366>=> </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>buffer</span><span style=color:#ed9366>.</span><span style=color:#f07171>push_back</span><span>(item)</span><span style=color:#61676ccc>,
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>) </span><span style=color:#ed9366>=> </span><span style=color:#fa6e32>break</span><span style=color:#61676ccc>,
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Pending </span><span style=color:#ed9366>=> </span><span style=color:#fa6e32>break</span><span style=color:#61676ccc>,
+</span><span>            }
+</span><span>        }
+</span><span>
+</span><span>        </span><span style=color:#abb0b6;font-style:italic>// Return item from buffer if available
+</span><span>        </span><span style=color:#fa6e32>if let </span><span style=color:#55b4d4;font-style:italic>Some</span><span>(item) </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>buffer</span><span style=color:#ed9366>.</span><span style=color:#f07171>pop_front</span><span>() {
+</span><span>            Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(item))
+</span><span>        } </span><span style=color:#fa6e32>else if </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>buffer</span><span style=color:#ed9366>.</span><span style=color:#f07171>is_empty</span><span>() {
+</span><span>            Pin</span><span style=color:#ed9366>::</span><span>new(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>source)</span><span style=color:#ed9366>.</span><span style=color:#f07171>poll_next</span><span>(cx)
+</span><span>        } </span><span style=color:#fa6e32>else </span><span>{
+</span><span>            Poll</span><span style=color:#ed9366>::</span><span>Pending
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h2 id=advanced-stream-patterns><a aria-label="Anchor link for: advanced-stream-patterns" class=zola-anchor href=#advanced-stream-patterns>Advanced Stream Patterns</a></h2><h3 id=1-back-pressure-implementation><a aria-label="Anchor link for: 1-back-pressure-implementation" class=zola-anchor href=#1-back-pressure-implementation>1. Back-Pressure Implementation</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>struct </span><span style=color:#399ee6>BackPressuredStream</span><span>&LTT> {
+</span><span>    inner</span><span style=color:#61676ccc>: </span><span>Pin<</span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn Stream&LTItem = T>>>,
+</span><span>    high_watermark</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>usize</span><span>,
+</span><span>    current_pressure</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>usize</span><span>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTT> </span><span style=color:#399ee6>BackPressuredStream</span><span>&LTT> {
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>new</span><span>(
+</span><span>        </span><span style=color:#ff8f40>inner</span><span style=color:#61676ccc>:</span><span> impl Stream&LTItem = T> + </span><span style=color:#fa6e32>'static</span><span>,
+</span><span>        </span><span style=color:#ff8f40>high_watermark</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>usize
+</span><span>    ) </span><span style=color:#61676ccc>-> </span><span style=color:#fa6e32>Self </span><span>{
+</span><span>        </span><span style=color:#fa6e32>Self </span><span>{
+</span><span>            inner</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Box</span><span style=color:#ed9366>::</span><span>pin(inner)</span><span style=color:#61676ccc>,
+</span><span>            high_watermark</span><span style=color:#61676ccc>,
+</span><span>            current_pressure</span><span style=color:#61676ccc>: </span><span style=color:#ff8f40>0</span><span style=color:#61676ccc>,
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTT> Stream </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>BackPressuredStream</span><span>&LTT> {
+</span><span>    </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item </span><span style=color:#ed9366>=</span><span> T</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>poll_next</span><span>(
+</span><span>        </span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>: Pin<</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut Self</span><span>>, 
+</span><span>        </span><span style=color:#ff8f40>cx</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span>Context<'</span><span style=color:#ed9366>_</span><span>>
+</span><span>    ) </span><span style=color:#61676ccc>-> </span><span>Poll<</span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item>> {
+</span><span>        </span><span style=color:#fa6e32>if </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_pressure </span><span style=color:#ed9366>>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>high_watermark {
+</span><span>            </span><span style=color:#fa6e32>return </span><span>Poll</span><span style=color:#ed9366>::</span><span>Pending</span><span style=color:#61676ccc>;
+</span><span>        }
+</span><span>
+</span><span>        </span><span style=color:#fa6e32>match </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>inner</span><span style=color:#ed9366>.</span><span style=color:#f07171>as_mut</span><span>()</span><span style=color:#ed9366>.</span><span style=color:#f07171>poll_next</span><span>(cx) {
+</span><span>            Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(item)) </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_pressure </span><span style=color:#ed9366>+= </span><span style=color:#ff8f40>1</span><span style=color:#61676ccc>;
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(item))
+</span><span>            }
+</span><span>            other </span><span style=color:#ed9366>=></span><span> other</span><span style=color:#61676ccc>,
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=2-rate-limited-stream><a aria-label="Anchor link for: 2-rate-limited-stream" class=zola-anchor href=#2-rate-limited-stream>2. Rate-Limited Stream</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>use </span><span>tokio</span><span style=color:#ed9366>::</span><span>time</span><span style=color:#ed9366>::</span><span>{Duration</span><span style=color:#61676ccc>,</span><span> Instant}</span><span style=color:#61676ccc>;
+</span><span>
+</span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>RateLimitedStream</span><span>&LTS> {
+</span><span>    inner</span><span style=color:#61676ccc>:</span><span> S,
+</span><span>    rate</span><span style=color:#61676ccc>:</span><span> Duration,
+</span><span>    last_emit</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Option</span><span>&LTInstant>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTS</span><span style=color:#61676ccc>:</span><span> Stream> Stream </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>RateLimitedStream</span><span>&LTS> {
+</span><span>    </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item </span><span style=color:#ed9366>= </span><span>S</span><span style=color:#ed9366>::</span><span>Item</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>poll_next</span><span>(
+</span><span>        </span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>: Pin<</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut Self</span><span>>, 
+</span><span>        </span><span style=color:#ff8f40>cx</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span>Context<'</span><span style=color:#ed9366>_</span><span>>
+</span><span>    ) </span><span style=color:#61676ccc>-> </span><span>Poll<</span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item>> {
+</span><span>        </span><span style=color:#fa6e32>let</span><span> now </span><span style=color:#ed9366>= </span><span>Instant</span><span style=color:#ed9366>::</span><span>now()</span><span style=color:#61676ccc>;
+</span><span>        
+</span><span>        </span><span style=color:#fa6e32>if let </span><span style=color:#55b4d4;font-style:italic>Some</span><span>(last_emit) </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>last_emit {
+</span><span>            </span><span style=color:#fa6e32>let</span><span> elapsed </span><span style=color:#ed9366>=</span><span> now </span><span style=color:#ed9366>-</span><span> last_emit</span><span style=color:#61676ccc>;
+</span><span>            </span><span style=color:#fa6e32>if</span><span> elapsed </span><span style=color:#ed9366>< </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>rate {
+</span><span>                </span><span style=color:#abb0b6;font-style:italic>// Not enough time has passed
+</span><span>                cx</span><span style=color:#ed9366>.</span><span style=color:#f07171>waker</span><span>()</span><span style=color:#ed9366>.</span><span style=color:#f07171>wake_by_ref</span><span>()</span><span style=color:#61676ccc>;
+</span><span>                </span><span style=color:#fa6e32>return </span><span>Poll</span><span style=color:#ed9366>::</span><span>Pending</span><span style=color:#61676ccc>;
+</span><span>            }
+</span><span>        }
+</span><span>
+</span><span>        </span><span style=color:#fa6e32>match unsafe </span><span>{ Pin</span><span style=color:#ed9366>::</span><span>new_unchecked(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>inner) }</span><span style=color:#ed9366>.</span><span style=color:#f07171>poll_next</span><span>(cx) {
+</span><span>            Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(item)) </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>last_emit </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>Some</span><span>(now)</span><span style=color:#61676ccc>;
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(item))
+</span><span>            }
+</span><span>            other </span><span style=color:#ed9366>=></span><span> other</span><span style=color:#61676ccc>,
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h2 id=performance-considerations><a aria-label="Anchor link for: performance-considerations" class=zola-anchor href=#performance-considerations>Performance Considerations</a></h2><h3 id=1-memory-management><a aria-label="Anchor link for: 1-memory-management" class=zola-anchor href=#1-memory-management>1. Memory Management</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>struct </span><span style=color:#399ee6>ChunkedStream</span><span>&LTS</span><span style=color:#61676ccc>:</span><span> Stream> {
+</span><span>    inner</span><span style=color:#61676ccc>:</span><span> S,
+</span><span>    chunk_size</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>usize</span><span>,
+</span><span>    current_chunk</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#fa6e32>S</span><span style=color:#ed9366>::</span><span>Item>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTS</span><span style=color:#61676ccc>:</span><span> Stream> Stream </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>ChunkedStream</span><span>&LTS> {
+</span><span>    </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#fa6e32>S</span><span style=color:#ed9366>::</span><span>Item></span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>poll_next</span><span>(
+</span><span>        </span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>: Pin<</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut Self</span><span>>, 
+</span><span>        </span><span style=color:#ff8f40>cx</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span>Context<'</span><span style=color:#ed9366>_</span><span>>
+</span><span>    ) </span><span style=color:#61676ccc>-> </span><span>Poll<</span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item>> {
+</span><span>        </span><span style=color:#fa6e32>while </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_chunk</span><span style=color:#ed9366>.</span><span style=color:#f07171>len</span><span>() </span><span style=color:#ed9366>< </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>chunk_size {
+</span><span>            </span><span style=color:#fa6e32>match unsafe </span><span>{ Pin</span><span style=color:#ed9366>::</span><span>new_unchecked(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>inner) }</span><span style=color:#ed9366>.</span><span style=color:#f07171>poll_next</span><span>(cx) {
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(item)) </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                    </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_chunk</span><span style=color:#ed9366>.</span><span style=color:#f07171>push</span><span>(item)</span><span style=color:#61676ccc>;
+</span><span>                }
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>) </span><span style=color:#fa6e32>if </span><span style=color:#ed9366>!</span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_chunk</span><span style=color:#ed9366>.</span><span style=color:#f07171>is_empty</span><span>() </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                    </span><span style=color:#fa6e32>return </span><span>Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(
+</span><span>                        std</span><span style=color:#ed9366>::</span><span>mem</span><span style=color:#ed9366>::</span><span>replace(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_chunk</span><span style=color:#61676ccc>, </span><span style=color:#55b4d4;font-style:italic>Vec</span><span style=color:#ed9366>::</span><span>new())
+</span><span>                    ))</span><span style=color:#61676ccc>;
+</span><span>                }
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>) </span><span style=color:#ed9366>=> </span><span style=color:#fa6e32>return </span><span>Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>)</span><span style=color:#61676ccc>,
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Pending </span><span style=color:#ed9366>=> </span><span style=color:#fa6e32>return </span><span>Poll</span><span style=color:#ed9366>::</span><span>Pending</span><span style=color:#61676ccc>,
+</span><span>            }
+</span><span>        }
+</span><span>
+</span><span>        </span><span style=color:#fa6e32>if </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_chunk</span><span style=color:#ed9366>.</span><span style=color:#f07171>len</span><span>() </span><span style=color:#ed9366>== </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>chunk_size {
+</span><span>            Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(
+</span><span>                std</span><span style=color:#ed9366>::</span><span>mem</span><span style=color:#ed9366>::</span><span>replace(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_chunk</span><span style=color:#61676ccc>, </span><span style=color:#55b4d4;font-style:italic>Vec</span><span style=color:#ed9366>::</span><span>with_capacity(</span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>chunk_size))
+</span><span>            ))
+</span><span>        } </span><span style=color:#fa6e32>else </span><span>{
+</span><span>            Poll</span><span style=color:#ed9366>::</span><span>Pending
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=2-cpu-bound-operations><a aria-label="Anchor link for: 2-cpu-bound-operations" class=zola-anchor href=#2-cpu-bound-operations>2. CPU-Bound Operations</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>struct </span><span style=color:#399ee6>ComputeBoundStream</span><span>&LTS, F> {
+</span><span>    inner</span><span style=color:#61676ccc>:</span><span> S,
+</span><span>    transform</span><span style=color:#61676ccc>:</span><span> F,
+</span><span>    runtime_handle</span><span style=color:#61676ccc>: </span><span>tokio</span><span style=color:#ed9366>::</span><span>runtime</span><span style=color:#ed9366>::</span><span>Handle,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTS, F, T, U> Stream </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>ComputeBoundStream</span><span>&LTS, F>
+</span><span style=color:#fa6e32>where
+</span><span>    S</span><span style=color:#61676ccc>: </span><span>Stream&LTItem = T> + Unpin,
+</span><span>    F</span><span style=color:#61676ccc>:</span><span> Fn(T) -> U + Send + </span><span style=color:#fa6e32>'static</span><span>,
+</span><span>    T</span><span style=color:#61676ccc>:</span><span> Send + </span><span style=color:#fa6e32>'static</span><span>,
+</span><span>    U</span><span style=color:#61676ccc>:</span><span> Send + </span><span style=color:#fa6e32>'static</span><span>,
+</span><span>{
+</span><span>    </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item </span><span style=color:#ed9366>=</span><span> U</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>poll_next</span><span>(
+</span><span>        </span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>: Pin<</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut Self</span><span>>, 
+</span><span>        </span><span style=color:#ff8f40>cx</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span>Context<'</span><span style=color:#ed9366>_</span><span>>
+</span><span>    ) </span><span style=color:#61676ccc>-> </span><span>Poll<</span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item>> {
+</span><span>        </span><span style=color:#fa6e32>match </span><span>Pin</span><span style=color:#ed9366>::</span><span>new(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>inner)</span><span style=color:#ed9366>.</span><span style=color:#f07171>poll_next</span><span>(cx) {
+</span><span>            Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(item)) </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                </span><span style=color:#fa6e32>let</span><span> transform </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>transform</span><span style=color:#ed9366>.</span><span style=color:#f07171>clone</span><span>()</span><span style=color:#61676ccc>;
+</span><span>                </span><span style=color:#fa6e32>let</span><span> handle </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>runtime_handle</span><span style=color:#ed9366>.</span><span style=color:#f07171>clone</span><span>()</span><span style=color:#61676ccc>;
+</span><span>                
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(handle</span><span style=color:#ed9366>.</span><span style=color:#f07171>block_on</span><span>(async </span><span style=color:#fa6e32>move </span><span>{
+</span><span>                    tokio</span><span style=color:#ed9366>::</span><span>task</span><span style=color:#ed9366>::</span><span>spawn_blocking(</span><span style=color:#fa6e32>move </span><span style=color:#ed9366>|| </span><span style=color:#f07171>transform</span><span>(item))</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#ed9366>.</span><span style=color:#f07171>unwrap</span><span>()
+</span><span>                })))
+</span><span>            }
+</span><span>            Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>) </span><span style=color:#ed9366>=> </span><span>Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>)</span><span style=color:#61676ccc>,
+</span><span>            Poll</span><span style=color:#ed9366>::</span><span>Pending </span><span style=color:#ed9366>=> </span><span>Poll</span><span style=color:#ed9366>::</span><span>Pending</span><span style=color:#61676ccc>,
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h2 id=error-handling><a aria-label="Anchor link for: error-handling" class=zola-anchor href=#error-handling>Error Handling</a></h2><h3 id=1-recoverable-errors><a aria-label="Anchor link for: 1-recoverable-errors" class=zola-anchor href=#1-recoverable-errors>1. Recoverable Errors</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>struct </span><span style=color:#399ee6>RetryStream</span><span>&LTS> {
+</span><span>    inner</span><span style=color:#61676ccc>:</span><span> S,
+</span><span>    retry_count</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>usize</span><span>,
+</span><span>    max_retries</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>usize</span><span>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTS, T, E> Stream </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>RetryStream</span><span>&LTS>
+</span><span style=color:#fa6e32>where
+</span><span>    S</span><span style=color:#61676ccc>: </span><span>Stream&LTItem = </span><span style=color:#55b4d4;font-style:italic>Result</span><span>&LTT, E>> + Unpin,
+</span><span>    E</span><span style=color:#61676ccc>: </span><span>std</span><span style=color:#ed9366>::</span><span>error</span><span style=color:#ed9366>::</span><span>Error,
+</span><span>{
+</span><span>    </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>Result</span><span>&LTT, E></span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>poll_next</span><span>(
+</span><span>        </span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>: Pin<</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut Self</span><span>>, 
+</span><span>        </span><span style=color:#ff8f40>cx</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span>Context<'</span><span style=color:#ed9366>_</span><span>>
+</span><span>    ) </span><span style=color:#61676ccc>-> </span><span>Poll<</span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item>> {
+</span><span>        </span><span style=color:#fa6e32>loop </span><span>{
+</span><span>            </span><span style=color:#fa6e32>match </span><span>Pin</span><span style=color:#ed9366>::</span><span>new(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>inner)</span><span style=color:#ed9366>.</span><span style=color:#f07171>poll_next</span><span>(cx) {
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(</span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(item))) </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                    </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>retry_count </span><span style=color:#ed9366>= </span><span style=color:#ff8f40>0</span><span style=color:#61676ccc>;
+</span><span>                    </span><span style=color:#fa6e32>return </span><span>Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(</span><span style=color:#55b4d4;font-style:italic>Ok</span><span>(item)))</span><span style=color:#61676ccc>;
+</span><span>                }
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(</span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e))) </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                    </span><span style=color:#fa6e32>if </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>retry_count </span><span style=color:#ed9366>< </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>max_retries {
+</span><span>                        </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>retry_count </span><span style=color:#ed9366>+= </span><span style=color:#ff8f40>1</span><span style=color:#61676ccc>;
+</span><span>                        </span><span style=color:#fa6e32>continue</span><span style=color:#61676ccc>;
+</span><span>                    }
+</span><span>                    </span><span style=color:#fa6e32>return </span><span>Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(</span><span style=color:#55b4d4;font-style:italic>Err</span><span>(e)))</span><span style=color:#61676ccc>;
+</span><span>                }
+</span><span>                other </span><span style=color:#ed9366>=> </span><span style=color:#fa6e32>return</span><span> other</span><span style=color:#61676ccc>,
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=2-unrecoverable-errors><a aria-label="Anchor link for: 2-unrecoverable-errors" class=zola-anchor href=#2-unrecoverable-errors>2. Unrecoverable Errors</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>struct </span><span style=color:#399ee6>FallibleStream</span><span>&LTS> {
+</span><span>    inner</span><span style=color:#61676ccc>:</span><span> S,
+</span><span>    error_handler</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn </span><span style=color:#55b4d4;font-style:italic>Fn</span><span>(</span><span style=color:#55b4d4;font-style:italic>Box</span><span>&LTdyn std</span><span style=color:#ed9366>::</span><span>error</span><span style=color:#ed9366>::</span><span>Error>) </span><span style=color:#ed9366>+ </span><span style=color:#55b4d4;font-style:italic>Send</span><span>>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTS</span><span style=color:#61676ccc>:</span><span> Stream> Stream </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>FallibleStream</span><span>&LTS> {
+</span><span>    </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item </span><span style=color:#ed9366>= </span><span>S</span><span style=color:#ed9366>::</span><span>Item</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>poll_next</span><span>(
+</span><span>        </span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>: Pin<</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut Self</span><span>>, 
+</span><span>        </span><span style=color:#ff8f40>cx</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span>Context<'</span><span style=color:#ed9366>_</span><span>>
+</span><span>    ) </span><span style=color:#61676ccc>-> </span><span>Poll<</span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item>> {
+</span><span>        </span><span style=color:#fa6e32>match unsafe </span><span>{ Pin</span><span style=color:#ed9366>::</span><span>new_unchecked(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>inner) }</span><span style=color:#ed9366>.</span><span style=color:#f07171>poll_next</span><span>(cx) {
+</span><span>            Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(item)) </span><span style=color:#ed9366>=> </span><span>Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(item))</span><span style=color:#61676ccc>,
+</span><span>            Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>) </span><span style=color:#ed9366>=> </span><span>Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>)</span><span style=color:#61676ccc>,
+</span><span>            Poll</span><span style=color:#ed9366>::</span><span>Pending </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                </span><span style=color:#abb0b6;font-style:italic>// Handle potential errors during pending state
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Pending
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h2 id=testing-strategies><a aria-label="Anchor link for: testing-strategies" class=zola-anchor href=#testing-strategies>Testing Strategies</a></h2><h3 id=1-mock-streams><a aria-label="Anchor link for: 1-mock-streams" class=zola-anchor href=#1-mock-streams>1. Mock Streams</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>cfg</span><span>(test)]
+</span><span style=color:#fa6e32>mod </span><span style=color:#399ee6>tests </span><span>{
+</span><span>    </span><span style=color:#fa6e32>use super</span><span style=color:#ed9366>::*</span><span style=color:#61676ccc>;
+</span><span>    </span><span style=color:#fa6e32>use </span><span>futures</span><span style=color:#ed9366>::</span><span>stream</span><span style=color:#61676ccc>;
+</span><span>    </span><span style=color:#fa6e32>use </span><span>std</span><span style=color:#ed9366>::</span><span>time</span><span style=color:#ed9366>::</span><span>Duration</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>struct </span><span style=color:#399ee6>MockStream</span><span>&LTT> {
+</span><span>        items</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span>&LTT>,
+</span><span>        delay</span><span style=color:#61676ccc>:</span><span> Duration,
+</span><span>    }
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>impl</span><span>&LTT</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Clone</span><span>> Stream </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>MockStream</span><span>&LTT> {
+</span><span>        </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item </span><span style=color:#ed9366>=</span><span> T</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>        </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>poll_next</span><span>(
+</span><span>            </span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>: Pin<</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut Self</span><span>>, 
+</span><span>            </span><span style=color:#ff8f40>cx</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span>Context<'</span><span style=color:#ed9366>_</span><span>>
+</span><span>        ) </span><span style=color:#61676ccc>-> </span><span>Poll<</span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item>> {
+</span><span>            </span><span style=color:#fa6e32>if </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>items</span><span style=color:#ed9366>.</span><span style=color:#f07171>is_empty</span><span>() {
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>)
+</span><span>            } </span><span style=color:#fa6e32>else </span><span>{
+</span><span>                tokio</span><span style=color:#ed9366>::</span><span>time</span><span style=color:#ed9366>::</span><span>sleep(</span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>delay)</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(</span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>items</span><span style=color:#ed9366>.</span><span style=color:#f07171>remove</span><span>(</span><span style=color:#ff8f40>0</span><span>)))
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>tokio</span><span>::</span><span style=color:#f29718>test</span><span>]
+</span><span>    async </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>test_stream_behavior</span><span>() {
+</span><span>        </span><span style=color:#fa6e32>let</span><span> mock </span><span style=color:#ed9366>=</span><span> MockStream {
+</span><span>            items</span><span style=color:#61676ccc>: </span><span style=color:#f07171>vec!</span><span>[</span><span style=color:#ff8f40>1</span><span style=color:#61676ccc>, </span><span style=color:#ff8f40>2</span><span style=color:#61676ccc>, </span><span style=color:#ff8f40>3</span><span>]</span><span style=color:#61676ccc>,
+</span><span>            delay</span><span style=color:#61676ccc>: </span><span>Duration</span><span style=color:#ed9366>::</span><span>from_millis(</span><span style=color:#ff8f40>100</span><span>)</span><span style=color:#61676ccc>,
+</span><span>        }</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>        </span><span style=color:#fa6e32>let mut</span><span> stream </span><span style=color:#ed9366>= </span><span>BufferedStream</span><span style=color:#ed9366>::</span><span>new(mock</span><span style=color:#61676ccc>, </span><span style=color:#ff8f40>2</span><span>)</span><span style=color:#61676ccc>;
+</span><span>        
+</span><span>        </span><span style=color:#f07171>assert_eq!</span><span>(stream</span><span style=color:#ed9366>.</span><span style=color:#f07171>next</span><span>()</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>, </span><span style=color:#55b4d4;font-style:italic>Some</span><span>(</span><span style=color:#ff8f40>1</span><span>))</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#f07171>assert_eq!</span><span>(stream</span><span style=color:#ed9366>.</span><span style=color:#f07171>next</span><span>()</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>, </span><span style=color:#55b4d4;font-style:italic>Some</span><span>(</span><span style=color:#ff8f40>2</span><span>))</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#f07171>assert_eq!</span><span>(stream</span><span style=color:#ed9366>.</span><span style=color:#f07171>next</span><span>()</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>, </span><span style=color:#55b4d4;font-style:italic>Some</span><span>(</span><span style=color:#ff8f40>3</span><span>))</span><span style=color:#61676ccc>;
+</span><span>        </span><span style=color:#f07171>assert_eq!</span><span>(stream</span><span style=color:#ed9366>.</span><span style=color:#f07171>next</span><span>()</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>, </span><span style=color:#55b4d4;font-style:italic>None</span><span>)</span><span style=color:#61676ccc>;
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=2-property-based-testing><a aria-label="Anchor link for: 2-property-based-testing" class=zola-anchor href=#2-property-based-testing>2. Property-Based Testing</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>cfg</span><span>(test)]
+</span><span style=color:#fa6e32>mod </span><span style=color:#399ee6>tests </span><span>{
+</span><span>    </span><span style=color:#fa6e32>use </span><span>proptest</span><span style=color:#ed9366>::</span><span>prelude</span><span style=color:#ed9366>::*</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#f07171>proptest! </span><span>{
+</span><span>        </span><span style=color:#61676ccc>#</span><span>[</span><span style=color:#f29718>test</span><span>]
+</span><span>        </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>test_stream_properties</span><span>(</span><span style=color:#ff8f40>inputs</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#fa6e32>i32</span><span>>) {
+</span><span>            </span><span style=color:#fa6e32>let</span><span> stream </span><span style=color:#ed9366>= </span><span>stream</span><span style=color:#ed9366>::</span><span>iter(inputs</span><span style=color:#ed9366>.</span><span style=color:#f07171>clone</span><span>())</span><span style=color:#61676ccc>;
+</span><span>            </span><span style=color:#fa6e32>let</span><span> buffered </span><span style=color:#ed9366>= </span><span>BufferedStream</span><span style=color:#ed9366>::</span><span>new(stream</span><span style=color:#61676ccc>, </span><span style=color:#ff8f40>10</span><span>)</span><span style=color:#61676ccc>;
+</span><span>            
+</span><span>            tokio_test</span><span style=color:#ed9366>::</span><span>block_on(async {
+</span><span>                </span><span style=color:#fa6e32>let</span><span> collected</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#ed9366>_</span><span>> </span><span style=color:#ed9366>=</span><span> buffered</span><span style=color:#ed9366>.</span><span style=color:#f07171>collect</span><span>()</span><span style=color:#ed9366>.</span><span>await</span><span style=color:#61676ccc>;
+</span><span>                </span><span style=color:#f07171>prop_assert_eq!</span><span>(inputs</span><span style=color:#61676ccc>,</span><span> collected)</span><span style=color:#61676ccc>;
+</span><span>            })</span><span style=color:#61676ccc>;
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h2 id=best-practices-and-optimizations><a aria-label="Anchor link for: best-practices-and-optimizations" class=zola-anchor href=#best-practices-and-optimizations>Best Practices and Optimizations</a></h2><h3 id=1-stream-fusion><a aria-label="Anchor link for: 1-stream-fusion" class=zola-anchor href=#1-stream-fusion>1. Stream Fusion</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>struct </span><span style=color:#399ee6>FusedStream</span><span>&LTS> {
+</span><span>    inner</span><span style=color:#61676ccc>:</span><span> S,
+</span><span>    is_terminated</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>bool</span><span>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTS</span><span style=color:#61676ccc>:</span><span> Stream> Stream </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>FusedStream</span><span>&LTS> {
+</span><span>    </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item </span><span style=color:#ed9366>= </span><span>S</span><span style=color:#ed9366>::</span><span>Item</span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>poll_next</span><span>(
+</span><span>        </span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>: Pin<</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut Self</span><span>>, 
+</span><span>        </span><span style=color:#ff8f40>cx</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span>Context<'</span><span style=color:#ed9366>_</span><span>>
+</span><span>    ) </span><span style=color:#61676ccc>-> </span><span>Poll<</span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item>> {
+</span><span>        </span><span style=color:#fa6e32>if </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>is_terminated {
+</span><span>            </span><span style=color:#fa6e32>return </span><span>Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>)</span><span style=color:#61676ccc>;
+</span><span>        }
+</span><span>
+</span><span>        </span><span style=color:#fa6e32>match unsafe </span><span>{ Pin</span><span style=color:#ed9366>::</span><span>new_unchecked(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>inner) }</span><span style=color:#ed9366>.</span><span style=color:#f07171>poll_next</span><span>(cx) {
+</span><span>            Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>) </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>is_terminated </span><span style=color:#ed9366>= </span><span style=color:#ff8f40>true</span><span style=color:#61676ccc>;
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>)
+</span><span>            }
+</span><span>            other </span><span style=color:#ed9366>=></span><span> other</span><span style=color:#61676ccc>,
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre><h3 id=2-batch-processing><a aria-label="Anchor link for: 2-batch-processing" class=zola-anchor href=#2-batch-processing>2. Batch Processing</a></h3><pre class=language-rust data-lang=rust style=color:#61676c;background-color:#fafafa><code class=language-rust data-lang=rust><span style=color:#fa6e32>struct </span><span style=color:#399ee6>BatchProcessor</span><span>&LTS> {
+</span><span>    inner</span><span style=color:#61676ccc>:</span><span> S,
+</span><span>    batch_size</span><span style=color:#61676ccc>: </span><span style=color:#fa6e32>usize</span><span>,
+</span><span>    current_batch</span><span style=color:#61676ccc>: </span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#fa6e32>S</span><span style=color:#ed9366>::</span><span>Item>,
+</span><span>}
+</span><span>
+</span><span style=color:#fa6e32>impl</span><span>&LTS</span><span style=color:#61676ccc>:</span><span> Stream> Stream </span><span style=color:#fa6e32>for </span><span style=color:#399ee6>BatchProcessor</span><span>&LTS> {
+</span><span>    </span><span style=color:#fa6e32>type </span><span style=color:#399ee6>Item </span><span style=color:#ed9366>= </span><span style=color:#55b4d4;font-style:italic>Vec</span><span><</span><span style=color:#fa6e32>S</span><span style=color:#ed9366>::</span><span>Item></span><span style=color:#61676ccc>;
+</span><span>
+</span><span>    </span><span style=color:#fa6e32>fn </span><span style=color:#f29718>poll_next</span><span>(
+</span><span>        </span><span style=color:#fa6e32>mut </span><span style=color:#ff8f40>self</span><span>: Pin<</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut Self</span><span>>, 
+</span><span>        </span><span style=color:#ff8f40>cx</span><span style=color:#61676ccc>: </span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span>Context<'</span><span style=color:#ed9366>_</span><span>>
+</span><span>    ) </span><span style=color:#61676ccc>-> </span><span>Poll<</span><span style=color:#55b4d4;font-style:italic>Option</span><span><</span><span style=color:#fa6e32>Self</span><span style=color:#ed9366>::</span><span>Item>> {
+</span><span>        </span><span style=color:#fa6e32>while </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_batch</span><span style=color:#ed9366>.</span><span style=color:#f07171>len</span><span>() </span><span style=color:#ed9366>< </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>batch_size {
+</span><span>            </span><span style=color:#fa6e32>match unsafe </span><span>{ Pin</span><span style=color:#ed9366>::</span><span>new_unchecked(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>inner) }</span><span style=color:#ed9366>.</span><span style=color:#f07171>poll_next</span><span>(cx) {
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(item)) </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                    </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_batch</span><span style=color:#ed9366>.</span><span style=color:#f07171>push</span><span>(item)</span><span style=color:#61676ccc>;
+</span><span>                }
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>) </span><span style=color:#fa6e32>if </span><span style=color:#ed9366>!</span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_batch</span><span style=color:#ed9366>.</span><span style=color:#f07171>is_empty</span><span>() </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                    </span><span style=color:#fa6e32>return </span><span>Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(
+</span><span>                        std</span><span style=color:#ed9366>::</span><span>mem</span><span style=color:#ed9366>::</span><span>replace(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_batch</span><span style=color:#61676ccc>, </span><span style=color:#55b4d4;font-style:italic>Vec</span><span style=color:#ed9366>::</span><span>new())
+</span><span>                    ))</span><span style=color:#61676ccc>;
+</span><span>                }
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>) </span><span style=color:#ed9366>=> </span><span style=color:#fa6e32>return </span><span>Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>None</span><span>)</span><span style=color:#61676ccc>,
+</span><span>                Poll</span><span style=color:#ed9366>::</span><span>Pending </span><span style=color:#ed9366>=> </span><span>{
+</span><span>                    </span><span style=color:#fa6e32>if </span><span style=color:#ed9366>!</span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_batch</span><span style=color:#ed9366>.</span><span style=color:#f07171>is_empty</span><span>() {
+</span><span>                        </span><span style=color:#fa6e32>return </span><span>Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(
+</span><span>                            std</span><span style=color:#ed9366>::</span><span>mem</span><span style=color:#ed9366>::</span><span>replace(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_batch</span><span style=color:#61676ccc>, </span><span style=color:#55b4d4;font-style:italic>Vec</span><span style=color:#ed9366>::</span><span>new())
+</span><span>                        ))</span><span style=color:#61676ccc>;
+</span><span>                    }
+</span><span>                    </span><span style=color:#fa6e32>return </span><span>Poll</span><span style=color:#ed9366>::</span><span>Pending</span><span style=color:#61676ccc>;
+</span><span>                }
+</span><span>            }
+</span><span>        }
+</span><span>
+</span><span>        Poll</span><span style=color:#ed9366>::</span><span>Ready(</span><span style=color:#55b4d4;font-style:italic>Some</span><span>(
+</span><span>            std</span><span style=color:#ed9366>::</span><span>mem</span><span style=color:#ed9366>::</span><span>replace(</span><span style=color:#ed9366>&</span><span style=color:#fa6e32>mut </span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>current_batch</span><span style=color:#61676ccc>, </span><span style=color:#55b4d4;font-style:italic>Vec</span><span style=color:#ed9366>::</span><span>with_capacity(</span><span style=color:#55b4d4;font-style:italic>self</span><span style=color:#ed9366>.</span><span>batch_size))
+</span><span>        ))
+</span><span>    }
+</span><span>}
+</span></code></pre><h2 id=pros-and-cons><a aria-label="Anchor link for: pros-and-cons" class=zola-anchor href=#pros-and-cons>Pros and Cons</a></h2><h3 id=pros><a aria-label="Anchor link for: pros" class=zola-anchor href=#pros>Pros:</a></h3><ol><li><p><strong>Asynchronous Processing</strong></p> <ul><li>Natural fit for I/O-bound operations<li>Efficient resource utilization<li>Support for back-pressure</ul><li><p><strong>Composability</strong></p> <ul><li>Easy to chain transformations<li>Rich set of combinators<li>Integration with async/await</ul><li><p><strong>Memory Efficiency</strong></p> <ul><li>Lazy evaluation<li>Controlled buffering<li>Stream fusion opportunities</ul></ol><h3 id=cons><a aria-label="Anchor link for: cons" class=zola-anchor href=#cons>Cons:</a></h3><ol><li><p><strong>Complexity</strong></p> <ul><li>More complex than Iterator<li>Pin requirements<li>Error handling complexity</ul><li><p><strong>Runtime Overhead</strong></p> <ul><li>Task scheduling overhead<li>Memory allocation for futures<li>Context switching costs</ul><li><p><strong>Learning Curve</strong></p> <ul><li>Understanding async concepts<li>Dealing with lifetimes<li>Managing pinning</ul></ol><h2 id=conclusion><a aria-label="Anchor link for: conclusion" class=zola-anchor href=#conclusion>Conclusion</a></h2><p><code>futures::Stream</code> is a powerful abstraction for async programming in Rust, offering:<ul><li>Efficient handling of asynchronous sequences<li>Rich composition capabilities<li>Good performance characteristics</ul><p>However, it requires careful consideration of:<ul><li>Implementation complexity<li>Memory management<li>Error handling strategies<li>Performance implications</ul><p>The key to successful usage is understanding these trade-offs and choosing appropriate patterns for your specific use case.<p>Remember to:<ul><li>Profile your stream implementations<li>Test edge cases thoroughly<li>Consider backpressure mechanisms<li>Handle errors appropriately<li>Optimize for your specific use case</ul><p>This comprehensive overview shoul</section></article></main><div class=giscus></div><script async crossorigin issue-term=pathname repo=not-matthias/apollo src=https://utteranc.es/client.js theme=github-light></script></div>
