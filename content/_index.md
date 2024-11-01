@@ -12,7 +12,7 @@ Hi 👋🏼 Prabhat here Iam a Software engineer from last 3 years focusing towa
 - **Database:** PostgreSQL, MongoDB, Redis
 - **Tools:** Git, Docker, AWS, Linux, 
 
-Besides programming and professional I have immense love for Maths, Psychology and sports 
+Besides programming and professional work I have immense love for Maths, Psychology and sports. 
 
 ---
 

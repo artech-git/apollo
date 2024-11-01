@@ -1,5 +1,4 @@
 name: Deploy Zola to GitHub Pages
-
 on:
   push:
     branches:
@@ -51,4 +50,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          external_repository: artech-git/artech-git
+          publish_branch: gh-pages
           publish_dir: ./public
+          # external_repository: artech-git/artech-git
