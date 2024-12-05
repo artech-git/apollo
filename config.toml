@@ -1,4 +1,4 @@
-base_url = "https://artech-git.github.io/apollo/"
+base_url = "https://artech-git.github.io/"
 title = "artech"
 description = "Welcome to my personal site where I share my thoughts, projects, and experiences."
 build_search_index = false
@@ -20,7 +20,7 @@ fancy_code = true
 dynamic_note = true           # a note that can be toggled
 mathjax = true
 mathjax_dollar_inline_enable = true
-repo_url = "https://github.com/artech-git/apollo/tree/main/content"
+repo_url = "https://github.com/artech-git/artech-git.github.io/tree/main/content"
 
 menu = [
     { name = "/posts", url = "/posts", weight = 1 },
