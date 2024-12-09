@@ -140,10 +140,9 @@ But before we start to look over there **characteristics** and **differences**, 
 # AsRef vs Borrow vs Deref in Rust
 
 ## AsRef & AsMut trait
-`AsRef` is a trait for performing cheap reference-to-reference conversions. This includes read and write borrows! It's most commonly used for functions that can accept multiple types of concrete references. Thought it can be used to borrow Non-sized types too! 
+`AsRef` is a trait for performing cheap reference-to-reference conversions. This includes read and write borrows! It's most commonly used for functions that can accept multiple types of concrete references. It can also be used to borrow non-sized types!
 
-let's checkout a simple example first! 
-In the below example we are trying to borrow a type as a `str` but we are allowed to passed each type as a reference as illustrated below 
+Let's check out a simple example first. In the example below, we are trying to borrow a type as a `str`, but we are allowed to pass each type as a reference as illustrated below.
 
 ### Common Use Cases
 ```rust
@@ -159,9 +158,9 @@ let str_literal = "world";
 process_string(&string);  // works
 process_string(str_literal);  // also works
 ```
-In above example we have seen how we can pass around all those types which does `AsRef` implementation are now qualified to be passed as a owned type and later using `as_ref()` method we can call that type to be represented into intented type as a read only reference.
+In the above example, we have seen how we can pass around all those types that implement `AsRef`. These types are now qualified to be passed as owned types, and later, using the `as_ref()` method, we can call that type to be represented as the intended type as a read-only reference.
 
-Since there exists implementation for `&str` and `String` type as shown below
+Since there exist implementations for `&str` and `String` types as shown below:
 ```rust
 impl AsRef<str> for String {
     #[inline]
@@ -181,13 +180,11 @@ impl AsRef<str> for str {
 }
 ```
 
-Interestingly if you observe carefully here you will find that `AsRef` doesn't writes following type signature for the generic position `AsRef<&str>` instead it writes `AsRef<str>`, well if you are wondering why this is check out these two posts respectively [Rust nomicon reference](https://doc.rust-lang.org/nomicon/exotic-sizes.html) and [Niko matsakis](https://smallcultfollowing.com/babysteps/blog/2024/04/23/dynsized-unsized/), to understand the difference, now if you look on trait function `fn as_ref(&self) -> &str` it returns a borrowed version, Frankly the explanation behind how `str` is borrowed into `&str` deserves it's own post, but to give a short answer Inside the method, `self` is already of type `&str` because we're implementing a method that takes `&self`, so we can just return it directly since it matches the return type.
+Interestingly, if you observe carefully here, you will find that `AsRef` doesn't write the following type signature for the generic position `AsRef<&str>` instead, it writes `AsRef<str>`. If you are wondering why this is, check out these two posts respectively: [Rust nomicon reference](https://doc.rust-lang.org/nomicon/exotic-sizes.html) and [Niko Matsakis](https://smallcultfollowing.com/babysteps/blog/2024/04/23/dynsized-unsized/), to understand the difference. Now, if you look at the trait function `fn as_ref(&self) -> &str`, it returns a borrowed version. Frankly, the explanation behind how `str` is borrowed into `&str` deserves its own post, but to give a short answer: inside the method, `self` is already of type `&str` because we're implementing a method that takes `&self`, so we can just return it directly since it matches the return type.
 
-Now let's move our attention towards `AsMut` which let's us borrow a type mutably.
-If you visit standard library you will find there exists implementation for `AsMut` for `str` & `String` types, 
-these implementations are as follows
+Now let's move our attention towards `AsMut`, which lets us borrow a type mutably. If you visit the standard library, you will find there exist implementations for `AsMut` for `str` and `String` types. These implementations are as follows:
 
-for string type
+For the string type:
 ```rust
 impl AsMut<str> for String {
     #[inline]
@@ -205,13 +202,13 @@ impl AsMut<str> for str {
     }
 }
 ```
-Interestingly this time we borrow both of our types as mutable reference `&mut str` 
+Interestingly, this time we borrow both of our types as mutable references `&mut str`.
 
-By now Iam hoping this would have bought some clarity regarding how `AsRef` & `AsMut` trait could be used, but the real power of these trait lies in flexibility regarding how they can be used 
+By now, I am hoping this has brought some clarity regarding how the `AsRef` and `AsMut` traits can be used. The real power of these traits lies in their flexibility regarding how they can be used.
 
-Pay attention to how `AsRef` & `AsMut` are totally independent of each other, meaning they don't have any associated type dependency or super trait requirement unlike we previously saw for `Borrow`, `BorrowMut`, `Deref` & `DerefMut` traits, Hence we are given complete flexibity in regards how one Concrete type could be cheaply converted into another type, let's understand this explnation through a example
+Pay attention to how `AsRef` and `AsMut` are totally independent of each other, meaning they don't have any associated type dependency or super trait requirement, unlike what we previously saw for the `Borrow`, `BorrowMut`, `Deref`, and `DerefMut` traits. Hence, we are given complete flexibility in how one concrete type can be cheaply converted into another type. Let's understand this explanation through an example.
 
-let's think of a situation where you wish to convert a books type `Book` into some primitive representation such `&str` but as a immutable borrow only & also as `Vec<String>` but as a mutable reference.
+Let's think of a situation where you wish to convert a book type `Book` into some primitive representation such as `&str` as an immutable borrow only, and also as `Vec<String>` as a mutable reference.
 ```rust
 struct Book {
     title: String,
@@ -247,21 +244,18 @@ impl AsMut<[String]> for Book {
 ```
 
 ### Points to note while using AsRef & AsMut
-
-- Usage of these traits is best suited when you have to derive a type which is mostly a field of a struct and conversion doesn't involve any expensive computation 
-- These traits gives you flexibility in usage, meaning you may have a single `AsRef` for some type, where as you may have severals `AsMut` for distinct types and they don't depend on each other in any way ! 
-- It's better to avoid writing these traits for `Non-Sized` types such as `&dyn ..` or `&mut dyn..`  
-
-
+- Usage of these traits is best suited when you have to derive a type that is mostly a field of a struct, and the conversion doesn't involve any expensive computation.
+- These traits give you flexibility in usage, meaning you may have a single `AsRef` for some type, whereas you may have several `AsMut` for distinct types, and they don't depend on each other in any way!
+- It's better to avoid writing these traits for `Non-Sized` types such as `&dyn ..` or `&mut dyn..`.
 
 ## Borrow & BorrowMut
-`Borrow` trait is similar to `AsRef` trait in a way that it supports borrowing of type A into type B, but the catch lies that it let's you borrow rather than converting something, Hence point of comparsion shall be between **how to distinguish between borrow and conversion**
+The `Borrow` trait is similar to the `AsRef` trait in that it supports borrowing of type A into type B, but the catch is that it lets you borrow rather than convert something. Hence, the point of comparison shall be between **how to distinguish between borrowing and conversion**.
 
-**Conversion of any type to another type is straight forward since it doesn't enforces us to carry any further more semantic information, while borrowing shall satisfy such norms**
+**Conversion of any type to another type is straightforward since it doesn't enforce us to carry any further semantic information, while borrowing shall satisfy such norms.**
 
-From above information `Borrow` is similar to `AsRef` but with an additional contract: the borrowed form must **hash, compare, and order the same as the owned form**.
+From the above information, `Borrow` is similar to `AsRef` but with an additional contract: the borrowed form must **hash, compare, and order the same as the owned form**.
 
-Let's checkout it's definition first
+Let's check out its definition first.
 
 ```rust
 pub trait Borrow<Borrowed: ?Sized> {
@@ -279,9 +273,10 @@ where
     fn borrow_mut(&mut self) -> &mut Borrowed;
 }
 ```
-For `BorrowMut` definition as we can clearly observe, it depends over `Borrow<Borrowed>` implementation which is generic over `Borrowed`, therefore types which are going to implement `BorrowMut<Borrowed>` must first implement immutable version i.e. `Borrow<Borrowed>` this enforces a type to be borrowable in both forms i.e. `&T` & `&mut T` , unlike `AsRef` & `AsMut` trait which can be totally off to each other and there doesn't exists any correlation between them.
 
-Let's checkout `std::collections::HashMap` definition regarding `Borrow` trait 
+For the `BorrowMut` definition, as we can clearly observe, it depends on the `Borrow<Borrowed>` implementation, which is generic over `Borrowed`. Therefore, types that are going to implement `BorrowMut<Borrowed>` must first implement the immutable version, i.e., `Borrow<Borrowed>`. This enforces a type to be borrowable in both forms, i.e., `&T` and `&mut T`, unlike the `AsRef` and `AsMut` traits, which can be totally independent of each other and have no correlation between them.
+
+Let's check out the `std::collections::HashMap` definition regarding the `Borrow` trait.
 
 ### Use Cases
 ```rust
@@ -297,26 +292,25 @@ where
     ...
 }
 ```
-The type definition of `HashMap<K, V>` is generic over three params but we will only count `K` & `V` which are for key and value respectively for simplicity, now if get look on method `get` it declares a another generic `Q` which can be borrowed from `k` and `Q` must implement `Hash + Eq` traits as bounds, Since it requires that keys can be distinguishible.
+The type definition of `HashMap<K, V>` is generic over three parameters, but we will only consider `K` and `V`, which are for key and value respectively, for simplicity. Now, if we look at the method `get`, it declares another generic `Q` which can be borrowed from `k`, and `Q` must implement `Hash + Eq` traits as bounds, since it requires that keys can be distinguishable.
 
-This requirement is present for multiple methods of collections types within std library.
+This requirement is present for multiple methods of collection types within the standard library.
 
-**Note: `Borrow` & `BorrowMut` doesn't themselves enforces the semantics requirement through the definition, it is upto the defining method or struct to declare how semantics are going to be enforced via them**
+**Note: `Borrow` & `BorrowMut` themselves do not enforce the semantic requirements through their definitions. It is up to the defining method or struct to declare how semantics are going to be enforced via them.**
 
-Borrow traits can also be useful for types where we want to retreive a internal type rather than composed one, such as for `Vec<T>` which can be borrowed as mutable slice `&mut [T]`  and wish to modify over that rather than going through the route of converting it first
+Borrow traits can also be useful for types where we want to retrieve an internal type rather than a composed one, such as for `Vec<T>`, which can be borrowed as a mutable slice `&mut [T]` and modified directly rather than converting it first.
 
 ### Points to note
 1. Stricter semantic requirements, though not required by default.
-2. Essentially used for collections types such as HashMap and BtreeMap.
-3. You require to work on subtype of some composed type which might require modification as well. 
+2. Essentially used for collection types such as HashMap and BtreeMap.
+3. Useful when you need to work on a subtype of some composed type which might require modification.
 4. There may exist several definitions for a given type to be borrowed in different types.
 
-
 ## Deref & DerefMut
-The trait `Deref` is one of my personel favorite and quite powerful one, among all.
+The trait `Deref` is one of my personal favorites and quite a powerful one among all.
 `Deref` is used for dereferencing operations using the `*` operator and for automatic dereferencing to a defined type.
-unlike traits `Borrow` & `AsRef` ,deref carries a associated type as part of it's definition and can only be applied once.
-Let's checkout it's definition. 
+Unlike traits `Borrow` & `AsRef`, `Deref` carries an associated type as part of its definition and can only be applied once.
+Let's check out its definition.
 
 ```rust
 pub trait Deref {
@@ -331,16 +325,16 @@ pub trait DerefMut: Deref {
     fn deref_mut(&mut self) -> &mut Self::Target;
 }
 ```
-as you can clearly see it just like `BorrowMut`, `DerefMut` also depends over `Deref` to be pre-implemented for a type and interestingly the return type belongs from super trait `Deref` which can be borrowed mutably, this has majorly two advantages
-  
-  - Output type for both borrows can't be changed since it is based upon associated type.
-  - Prevent's the implementation to exist for more than one type
+As you can clearly see, just like `BorrowMut`, `DerefMut` also depends on `Deref` to be pre-implemented for a type. Interestingly, the return type belongs to the super trait `Deref`, which can be borrowed mutably. This has two major advantages:
 
-To find out more about how associated types are different generics I recommend you to read this blog [here](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html)
+- The output type for both borrows can't be changed since it is based on the associated type.
+- It prevents the implementation from existing for more than one type.
 
-Once a type impelement deref traits can now automatically call the methods of derefed types using dot `.` operator
+To find out more about how associated types are different from generics, I recommend you read this blog [here](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html).
 
-let's look at a simple example here
+Once a type implements deref traits, it can now automatically call the methods of dereferenced types using the dot `.` operator.
+
+Let's look at a simple example here.
 ### Common Use Cases
 ```rust
 use std::ops::Deref;
@@ -388,20 +382,19 @@ Those types which implement `Deref` trait are automatically qualified to use `*`
 ```rust
 let _val = (*x).remove(0);  // x -> Vec<u8> -> .remove()
 ```
-Now you might wonder why are both expression are making valid call to `remove`, once a type implements `Deref` trait it will attempt to call the respective method through implicit derefencing **If required** and will make multiple attempts if the subtype too implements `Deref` 
+Now you might wonder why both expressions are making valid calls to `remove`. Once a type implements the `Deref` trait, it will attempt to call the respective method through implicit dereferencing **if required** and will make multiple attempts if the subtype also implements `Deref`.
 
-here is a an straight forward exmaple, 
+Here is a straightforward example:
 
 ```rust
 let _val: Option<&mut u8> = x.last_mut(); // x -> Vec<u8> -> &mut [u8]
 ```
-If you visit `Vec<u8>` you will find that it implements [`Deref<Target=[u8]>`](https://doc.rust-lang.org/std/vec/struct.Vec.html#deref-methods-%5BT%5D) hence all the methods on &mut [u8] are directly accessible to us 
+If you visit `Vec<u8>`, you will find that it implements [`Deref<Target=[u8]>`](https://doc.rust-lang.org/std/vec/struct.Vec.html#deref-methods-%5BT%5D), hence all the methods on `&mut [u8]` are directly accessible to us.
 
-this is very useful and if not used cautiously could be the cause for bugs sometimes ! since you may call methods on some other type other than desired type! 
-Luckily in such a case only methods which are first observed are called through implicty dereference are called 
+This is very useful, but if not used cautiously, it could be the cause of bugs sometimes, since you may call methods on some other type other than the desired type! Luckily, in such cases, only methods that are first observed through implicit dereference are called.
 
 ### Deref Coercion
-One of the most powerful features of `Deref` is onsite coercion if a type implement deref traits, this could be helpful where we wish to avoid explicit casting/ conversions:
+One of the most powerful features of `Deref` is onsite coercion if a type implements deref traits. This could be helpful where we wish to avoid explicit casting/conversions:
 ```rust
 fn takes_str(s: &str) {
     println!("{}", s);
@@ -411,9 +404,9 @@ let string = String::from("hello");
 takes_str(&string);  // Works because String: Deref<Target=str>
 takes_str("string2");  // also works because it is a concrete type
 ```
-but hold a second, why would we need a such onsite coercion feature if we already have `AsRef` & `Borrow` traits to take care of job, well glad you asked !
+But hold on a second, why would we need such an onsite coercion feature if we already have `AsRef` and `Borrow` traits to take care of the job? Well, I'm glad you asked!
 
-If you observe the above definition carefully, you will notice it is a concrete type which is `&str` but for Asref & Borrow traits you will need to have type which must implement it anyhow, therefore limiting the application and optimizations available.
+If you observe the above definition carefully, you will notice it is a concrete type, which is `&str`. However, for `AsRef` and `Borrow` traits, you will need to have a type that must implement them anyhow, therefore limiting the application and optimizations available.
 
 Deref coercion is a powerful language feature if used correctly, you can read more about it [here](https://dev.to/artechgit/rust-deref-coercion-simplifying-borrowing-and-dereferencing-1a4a)
 
